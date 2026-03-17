@@ -1,0 +1,428 @@
+// =============================================================================
+// Martel Innovate – Custom Odoo 18 Theme
+// Primary brand color: #284b55
+// =============================================================================
+
+// ── CSS Custom Properties ────────────────────────────────────────────────────
+:root {
+    --martel-primary:        #284b55;
+    --martel-primary-dark:   #1c363e;
+    --martel-primary-light:  #3a6472;
+    --martel-primary-hover:  #2f5763;
+    --martel-weekend-bg:     #f0f2f3;
+    --martel-weekend-border: #d8dde0;
+    --martel-weekend-text:   #8a9aa0;
+}
+
+// =============================================================================
+// 1. TOP NAVBAR
+// =============================================================================
+.o_main_navbar {
+    background-color: var(--martel-primary) !important;
+    border-bottom: none !important;
+
+    .o_menu_brand,
+    .o_menu_brand:hover,
+    .o_menu_brand:focus {
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    // Nav sections / app switcher icon
+    .o_navbar_apps_menu .o_dropdown_title,
+    .o_home_menu_toggle .o_icon_button {
+        color: #ffffff !important;
+    }
+
+    .o_icon_button,
+    .o_icon_button:hover {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .o_icon_button:hover {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+    }
+
+    .o_notification_counter {
+        background-color: #e74c3c !important;
+    }
+
+    // Gear / settings / debug icons
+    .o_debug_manager button,
+    .o_user_menu .o_icon_button {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+}
+
+// Breadcrumb bar below navbar
+.o_control_panel {
+    .breadcrumb-item.active,
+    .breadcrumb-item a {
+        color: var(--martel-primary) !important;
+    }
+}
+
+// =============================================================================
+// 2. SIDEBAR / APP MENU  (dark sidebar like the screenshot)
+// =============================================================================
+.o_home_menu,
+.o_action_manager .o_home_menu {
+    background-color: var(--martel-primary-dark) !important;
+}
+
+// The left sidebar navigation (Settings > apps list in screenshot)
+.o_menu_sections,
+.o_menu_sections .o_nav_entry {
+    background-color: var(--martel-primary) !important;
+    color: #ffffff !important;
+}
+
+.o_menu_sections .o_nav_entry:hover,
+.o_menu_sections .o_nav_entry.active {
+    background-color: var(--martel-primary-light) !important;
+    color: #ffffff !important;
+}
+
+// Settings left panel (like image 2)
+.o_settings_container .o_setting_left_pane,
+.o_settings_menu_item {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+// App sidebar (the dark vertical menu)
+.o_web_client .o_action_manager > .o_action {
+    // when sidebar menus are shown
+}
+
+// Left menu / app nav
+.o_menu_sections > .o_nav_entry,
+.o_sub_menu_item {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.o_sub_menu_item.active,
+.o_sub_menu_item:hover {
+    background-color: var(--martel-primary-hover) !important;
+}
+
+// =============================================================================
+// 3. BUTTONS
+// =============================================================================
+
+// Primary button
+.btn-primary {
+    background-color: var(--martel-primary) !important;
+    border-color: var(--martel-primary) !important;
+    color: #ffffff !important;
+
+    &:hover,
+    &:focus,
+    &:active {
+        background-color: var(--martel-primary-dark) !important;
+        border-color: var(--martel-primary-dark) !important;
+        color: #ffffff !important;
+    }
+}
+
+// Status bar arrow buttons (Open → Waiting Review → Approved)
+.o_statusbar_status button.o_arrow_button {
+    &.btn-primary,
+    &[aria-checked="true"] {
+        background-color: var(--martel-primary) !important;
+        border-color: var(--martel-primary) !important;
+        color: #ffffff !important;
+
+        &::before {
+            border-left-color: var(--martel-primary) !important;
+        }
+    }
+
+    &:not([aria-checked="true"]):hover {
+        background-color: var(--martel-primary-light) !important;
+        border-color: var(--martel-primary-light) !important;
+        color: #ffffff !important;
+
+        &::before {
+            border-left-color: var(--martel-primary-light) !important;
+        }
+    }
+}
+
+// Control panel action buttons (Save, Discard, New, etc.)
+.o_control_panel .o_cp_buttons .btn-primary {
+    background-color: var(--martel-primary) !important;
+    border-color: var(--martel-primary) !important;
+}
+
+// Send message / Log note / Activities buttons (chatter)
+.o-mail-Chatter .o-mail-Chatter-top .btn,
+.o-mail-Chatter-actions .btn {
+    &.btn-primary {
+        background-color: var(--martel-primary) !important;
+        border-color: var(--martel-primary) !important;
+    }
+}
+
+// Form "Save manually" star / favorite icons
+.o_field_priority .fa-star,
+.o_priority .fa-star {
+    color: var(--martel-primary) !important;
+}
+
+// Links and accents
+a, a:not([href]):not([class]) {
+    color: var(--martel-primary) !important;
+
+    &:hover {
+        color: var(--martel-primary-dark) !important;
+    }
+}
+
+// Checkbox / toggle accent
+.form-check-input:checked {
+    background-color: var(--martel-primary) !important;
+    border-color: var(--martel-primary) !important;
+}
+
+.o_toggle_button:checked + .o_toggle_button_slider,
+.o_switch input:checked + span {
+    background-color: var(--martel-primary) !important;
+}
+
+// Badge / tag accent
+.badge.bg-primary,
+.badge.text-bg-primary {
+    background-color: var(--martel-primary) !important;
+}
+
+// Dropdown selected item highlight
+.dropdown-item:active,
+.dropdown-item.active {
+    background-color: var(--martel-primary) !important;
+}
+
+// Pagination
+.page-item.active .page-link {
+    background-color: var(--martel-primary) !important;
+    border-color: var(--martel-primary) !important;
+}
+
+// =============================================================================
+// 4. FORM VIEW – CHATTER MOVED TO BOTTOM
+// =============================================================================
+
+// The form view container is a flex row by default;
+// flip it to column so chatter stacks under the sheet.
+.o_form_view .o_form_view_container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+// Main form sheet takes full width
+.o_form_view .o_form_view_container .o_form_sheet_bg {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-right: none !important;
+}
+
+// Chatter aside → full width strip at the bottom
+.o_form_view .o_form_view_container .o-mail-Form-chatter,
+.o_form_view .o_form_view_container .o_aside {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    border-left: none !important;
+    border-top: 1px solid #dee2e6 !important;
+    padding-top: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+// Keep the chatter inner layout sane (message list + input)
+.o-mail-Form-chatter .o-mail-Thread {
+    max-height: none !important;
+}
+
+// =============================================================================
+// 5. TIMESHEET GRID – FULL WIDTH & RESPONSIVE
+// =============================================================================
+
+// Force the grid view to use full available width
+.o_grid_view,
+.o_view_controller.o_grid_view {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.o_grid_view .o_grid_renderer {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
+.o_grid_view table,
+.o_grid_renderer table {
+    width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse;
+}
+
+// Column widths: let the project/task label column be wider, shrink day cols
+.o_grid_renderer table th:first-child,
+.o_grid_renderer table td:first-child {
+    min-width: 180px !important;
+    white-space: normal !important;
+}
+
+.o_grid_renderer table th:not(:first-child),
+.o_grid_renderer table td:not(:first-child) {
+    min-width: 52px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+}
+
+// Row total column
+.o_grid_renderer table th.o_grid_total,
+.o_grid_renderer table td.o_grid_total {
+    font-weight: 700 !important;
+    color: var(--martel-primary) !important;
+    background-color: rgba(40, 75, 85, 0.06) !important;
+    border-left: 2px solid var(--martel-primary-light) !important;
+}
+
+// Totals footer row
+.o_grid_renderer tr.o_grid_row_total td,
+.o_grid_renderer tfoot td {
+    font-weight: 700 !important;
+    background-color: rgba(40, 75, 85, 0.08) !important;
+    border-top: 2px solid var(--martel-primary) !important;
+}
+
+// =============================================================================
+// 6. WEEKEND COLUMNS (Saturday & Sunday) – grey background
+//    JS adds .o_weekend class to th/td elements; this is the CSS part.
+// =============================================================================
+
+// Applied via JS patch (see weekend_highlighter.js)
+.o_grid_renderer th.o_weekend,
+.o_grid_renderer td.o_weekend {
+    background-color: var(--martel-weekend-bg) !important;
+    color: var(--martel-weekend-text) !important;
+}
+
+// Weekend header cell
+.o_grid_renderer thead th.o_weekend {
+    background-color: #e4e8ea !important;
+    color: var(--martel-weekend-text) !important;
+    font-style: italic;
+}
+
+// Input cells inside weekend columns should look disabled
+.o_grid_renderer td.o_weekend .o_grid_cell_container,
+.o_grid_renderer td.o_weekend input {
+    background-color: transparent !important;
+    color: var(--martel-weekend-text) !important;
+    cursor: default !important;
+    pointer-events: none !important;  // remove if weekend hours ARE allowed
+}
+
+// Optionally show a subtle pattern on weekend cells
+.o_grid_renderer td.o_weekend::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        135deg,
+        transparent,
+        transparent 4px,
+        rgba(0, 0, 0, 0.025) 4px,
+        rgba(0, 0, 0, 0.025) 5px
+    );
+    pointer-events: none;
+}
+
+.o_grid_renderer td.o_weekend {
+    position: relative !important;
+}
+
+// =============================================================================
+// 7. TIMESHEET INSIDE FORM VIEW (the inline timesheet table – timesheet sheet)
+// =============================================================================
+
+// The timesheet sheet inside a form (hr.timesheet.sheet)
+.o_timesheet_container,
+.timesheet-details,
+.o_form_view .o_field_one2many .o_list_renderer {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
+// Summary table (like screenshot 1)
+.o_timesheet_container table,
+.o_form_view .o_field_one2many table {
+    width: 100% !important;
+    min-width: max-content;
+}
+
+// =============================================================================
+// 8. LIST VIEW – minor accents
+// =============================================================================
+
+.o_list_view thead {
+    background-color: rgba(40, 75, 85, 0.07) !important;
+
+    th {
+        color: var(--martel-primary-dark) !important;
+    }
+}
+
+.o_list_view tbody tr.o_data_row:hover > td {
+    background-color: rgba(40, 75, 85, 0.05) !important;
+}
+
+.o_list_view tbody tr.o_data_row.o_selected_row > td {
+    background-color: rgba(40, 75, 85, 0.1) !important;
+}
+
+// =============================================================================
+// 9. KANBAN – accent
+// =============================================================================
+
+.o_kanban_view .o_kanban_card_header .o_kanban_record_headings {
+    color: var(--martel-primary) !important;
+}
+
+// =============================================================================
+// 10. MISC ACCENTS
+// =============================================================================
+
+// Loading bar / progress
+.o_loading_indicator,
+.progress-bar {
+    background-color: var(--martel-primary) !important;
+}
+
+// Active / selected menu item
+.o_menu_sections .o_nav_entry.o_current,
+.o_main_navbar .o_current_menu_section {
+    border-bottom: 3px solid rgba(255, 255, 255, 0.7) !important;
+}
+
+// Field focus border
+.o_field_widget input:focus,
+.o_field_widget textarea:focus,
+.o_field_widget select:focus {
+    border-color: var(--martel-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 75, 85, 0.25) !important;
+}
+
+// Tabs (Summary / Details in timesheet)
+.nav-tabs .nav-link.active {
+    border-bottom-color: var(--martel-primary) !important;
+    color: var(--martel-primary) !important;
+    font-weight: 600 !important;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--martel-primary-light) !important;
+}
