@@ -1,6 +1,6 @@
 from odoo import fields, models, api, _
 from odoo.exceptions import ValidationError, UserError
-import pypdf
+from odoo.tools.pdf import OdooPdfFileReader, OdooPdfFileWriter
 import base64
 import io
 from PIL import Image
@@ -42,21 +42,20 @@ class DownloadExpAttachment(models.TransientModel):
         if not atms:
             raise UserError(_('The report does not have attachments'))
 
-        # pypdf replaces the deprecated PyPDF2 library
-        writer = pypdf.PdfWriter()
+        writer = OdooPdfFileWriter()
 
         for atm in atms:
             decoded_data = base64.b64decode(atm.datas)
 
             if atm.mimetype == 'application/pdf':
-                reader = pypdf.PdfReader(io.BytesIO(decoded_data), strict=False)
+                reader = OdooPdfFileReader(io.BytesIO(decoded_data), strict=False)
                 for page in reader.pages:
                     writer.add_page(page)
 
             elif atm.mimetype in ('image/jpeg', 'image/png', 'image/jpg'):
                 try:
                     pdf_buffer = self.convert_image_to_pdf(decoded_data)
-                    image_pdf = pypdf.PdfReader(pdf_buffer)
+                    image_pdf = OdooPdfFileReader(pdf_buffer)
                     writer.add_page(image_pdf.pages[0])
                 except Exception as e:
                     raise UserError(_('Error converting image %s: %s') % (atm.name, str(e)))

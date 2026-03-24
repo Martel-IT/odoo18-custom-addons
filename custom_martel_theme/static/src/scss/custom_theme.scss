@@ -64,46 +64,87 @@
 }
 
 // =============================================================================
-// 2. SIDEBAR / APP MENU  (dark sidebar like the screenshot)
+// 2. APP SIDEBAR (slides in when the ≡ menu button is clicked)
+//    Odoo 18 classes: .o_app_menu_sidebar  and  .o_burger_menu
 // =============================================================================
-.o_home_menu,
-.o_action_manager .o_home_menu {
-    background-color: var(--martel-primary-dark) !important;
+
+$martel-sidebar-bg: #182830;   // very dark teal-black for sidebar body
+
+// ── Sidebar containers ───────────────────────────────────────────────────────
+.o_app_menu_sidebar,
+.o_burger_menu {
+    background-color: $martel-sidebar-bg !important;
+
+    // Top bar (logo / app name + close button)
+    .o_sidebar_topbar {
+        background-color: var(--martel-primary-dark) !important;
+        color: #ffffff !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+
+        .dropdown-toggle {
+            color: #ffffff !important;
+        }
+
+        .o_sidebar_close {
+            color: rgba(255, 255, 255, 0.8) !important;
+
+            &:hover {
+                color: #ffffff !important;
+                background-color: rgba(255, 255, 255, 0.1) !important;
+            }
+        }
+    }
+
+    // ── App list content area ─────────────────────────────────────────────────
+    .o_burger_menu_content {
+        &.o_burger_menu_app {
+            background-color: $martel-sidebar-bg !important;
+        }
+
+        // Default item text
+        li, button, a {
+            color: rgba(255, 255, 255, 0.82) !important;
+
+            &:hover {
+                color: #ffffff !important;
+                background-color: rgba(255, 255, 255, 0.07) !important;
+                border-radius: 6px !important;
+            }
+        }
+    }
+
+    // ── Nav entries (secondary menu items rendered inside the sidebar) ─────────
+    .o_nav_entry {
+        color: rgba(255, 255, 255, 0.82) !important;
+        border-radius: 6px !important;
+
+        &:hover, &:focus {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        &.active, &[aria-current="page"] {
+            background-color: var(--martel-primary) !important;
+            color: #ffffff !important;
+        }
+    }
 }
 
-// The left sidebar navigation (Settings > apps list in screenshot)
-.o_menu_sections,
-.o_menu_sections .o_nav_entry {
-    background-color: var(--martel-primary) !important;
-    color: #ffffff !important;
-}
+// ── Horizontal secondary menu (top bar: My Timesheets | To Review | …) ───────
+// These nav entries live in the top navbar, not in the sidebar.
+.o_main_navbar .o_menu_sections .o_nav_entry {
+    color: rgba(255, 255, 255, 0.88) !important;
 
-.o_menu_sections .o_nav_entry:hover,
-.o_menu_sections .o_nav_entry.active {
-    background-color: var(--martel-primary-light) !important;
-    color: #ffffff !important;
-}
+    &:hover, &:focus {
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
 
-// Settings left panel (like image 2)
-.o_settings_container .o_setting_left_pane,
-.o_settings_menu_item {
-    color: rgba(255, 255, 255, 0.85);
-}
-
-// App sidebar (the dark vertical menu)
-.o_web_client .o_action_manager > .o_action {
-    // when sidebar menus are shown
-}
-
-// Left menu / app nav
-.o_menu_sections > .o_nav_entry,
-.o_sub_menu_item {
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.o_sub_menu_item.active,
-.o_sub_menu_item:hover {
-    background-color: var(--martel-primary-hover) !important;
+    &.active, &[aria-current="page"] {
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.7) !important;
+    }
 }
 
 // =============================================================================
@@ -212,36 +253,45 @@ a, a:not([href]):not([class]) {
 // 4. FORM VIEW – CHATTER MOVED TO BOTTOM
 // =============================================================================
 
-// The form view container is a flex row by default;
-// flip it to column so chatter stacks under the sheet.
+// Flip form container to column so chatter stacks under the sheet.
 .o_form_view .o_form_view_container {
+    display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
+    height: 100% !important;
 }
 
-// Main form sheet takes full width
+// Main form sheet: takes all remaining space, scrollable.
+// min-height: 0 is critical for flex column – without it, the item
+// refuses to shrink below its content size and the chatter gets pushed out.
 .o_form_view .o_form_view_container .o_form_sheet_bg {
     flex: 1 1 auto !important;
+    min-height: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     border-right: none !important;
+    overflow-y: auto !important;
 }
 
-// Chatter aside → full width strip at the bottom
+// Chatter: fixed-height strip at the bottom, internally scrollable.
+// flex: 0 0 auto prevents it from growing and stealing space from the form.
 .o_form_view .o_form_view_container .o-mail-Form-chatter,
 .o_form_view .o_form_view_container .o_aside {
+    flex: 0 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+    max-height: 480px !important;
+    overflow-y: auto !important;
     border-left: none !important;
     border-top: 1px solid #dee2e6 !important;
     padding-top: 16px !important;
-    flex-shrink: 0 !important;
 }
 
-// Keep the chatter inner layout sane (message list + input)
+// Chatter inner thread: allow natural height within the 480px cap
 .o-mail-Form-chatter .o-mail-Thread {
     max-height: none !important;
+    overflow: visible !important;
 }
 
 // =============================================================================

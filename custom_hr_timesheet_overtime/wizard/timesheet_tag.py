@@ -45,13 +45,14 @@ class CreateTimesheetWithTag(models.TransientModel):
                 _('You added wrong date period.'))
 
 
-    @api.model
-    def create(self, values):
-        if values.get('date_end') and values.get('date_start') \
-                and values.get('date_start') > values.get('date_end'):
-            raise ValidationError(
-                _('You added wrong date period.'))
-        return super(CreateTimesheetWithTag, self).create(values)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for values in vals_list:
+            if values.get('date_end') and values.get('date_start') \
+                    and values.get('date_start') > values.get('date_end'):
+                raise ValidationError(
+                    _('You added wrong date period.'))
+        return super(CreateTimesheetWithTag, self).create(vals_list)
 
 
     def open_timesheet(self):

@@ -221,9 +221,9 @@ class ResourceCalendarAttendance(models.Model):
             self.change_working_time(None, None)
         return res
 
-    @api.model
-    def create(self, values):
-        res = super(ResourceCalendarAttendance, self).create(values)
+    @api.model_create_multi
+    def create(self, vals_list):
+        res = super(ResourceCalendarAttendance, self).create(vals_list)
         res.change_working_time(None, None)
         return res
 
