@@ -158,10 +158,16 @@ class Sheet(models.Model):
             sheet.prev_timesheet_diff = prev_timesheet_diff
 
     def _get_analysis(self):
+        diff_neg_style = ('background-color:rgba(220,53,69,0.15);'
+                          'color:#b02030;font-weight:600;')
+        diff_pos_style = ('background-color:rgba(25,135,84,0.13);'
+                          'color:#146c43;font-weight:600;')
+
         for sheet in self:
             data = self.attendance_analysis(sheet.id, function_call=True)
             keys = (_('Date'), _('Running'), _('Duty Hours'), _('Worked Hours'),
                     _('Difference'))
+            diff_key = _('Difference')
             output = [
                 '<style>'
                 '.attendanceTable td, .attendanceTable th {padding: 3px; border: 1px solid #C0C0C0;'
@@ -189,7 +195,12 @@ class Sheet(models.Model):
                     for row in data['hours']:
                         output.append('<tr>')
                         for th in keys:
-                            output.append('<td>' + row.get(th, '') + '</td>')
+                            val = row.get(th, '')
+                            if th == diff_key and val and val != '00:00':
+                                style = diff_neg_style if val.startswith('-') else diff_pos_style
+                                output.append('<td style="' + style + '">' + val + '</td>')
+                            else:
+                                output.append('<td>' + val + '</td>')
                         output.append('</tr>')
             output.append('<tr>')
             total_ts = _('Total:')

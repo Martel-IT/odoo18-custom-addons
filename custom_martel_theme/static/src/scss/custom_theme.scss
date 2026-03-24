@@ -361,6 +361,13 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     border-right: 1px solid $martel-sidebar-border !important;
     display: flex !important;
     flex-direction: column !important;
+    // Full-height: from navbar bottom to viewport bottom, no gap
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    height: 100dvh !important;
+    z-index: 1055 !important;
 
     // ── Top bar (app name + close button) ─────────────────────────────────────
     .o_sidebar_topbar {
@@ -594,44 +601,43 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
 // =============================================================================
 // 4. FORM VIEW – CHATTER MOVED TO BOTTOM (all screen sizes)
 //
-// Strategy: force flex-column at every breakpoint so the chatter always
-// stacks below the sheet. The sheet gets min-height: 300px so it can never
-// collapse to zero on tall/wide viewports.
+// Strategy: flex-wrap on the container + flex-basis:100% on both sheet and
+// chatter. This forces each child onto its own "row" regardless of what
+// flex-direction Odoo or its media queries set. More robust than fighting
+// over flex-direction at every breakpoint.
 // =============================================================================
 
-// ── Form container: column at ALL breakpoints ─────────────────────────────────
+// ── Form container: wrapping flex ─────────────────────────────────────────────
 .o_form_view .o_form_view_container {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    // Do NOT use height: 100% – it collapses the sheet on wide screens.
-    // Let the container grow naturally with its content.
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    align-content: flex-start !important;
     height: auto !important;
     min-height: 0 !important;
 }
 
-// Override Odoo's responsive breakpoints that switch to row (sidebar) layout
+// Keep the override at every Bootstrap breakpoint
 @media (min-width: 576px) {
     .o_form_view .o_form_view_container {
-        flex-direction: column !important;
+        flex-wrap: wrap !important;
     }
 }
 
-// ── Form sheet: always visible, takes remaining space ─────────────────────────
+// ── Form sheet: full-width "row" ───────────────────────────────────────────────
 .o_form_view .o_form_view_container .o_form_sheet_bg {
-    flex: 1 1 auto !important;
-    // Guarantee the sheet is never hidden on large screens
+    flex: 1 0 100% !important;   // grow, don't shrink, 100% basis → own row
     min-height: 300px !important;
     width: 100% !important;
     max-width: 100% !important;
     border-right: none !important;
-    overflow-y: auto !important;
+    // No overflow-y here: let content flow naturally
 }
 
-// ── Chatter: capped strip at the bottom ──────────────────────────────────────
+// ── Chatter: full-width strip below the sheet ─────────────────────────────────
 .o_form_view .o_form_view_container .o-mail-Form-chatter,
 .o_form_view .o_form_view_container .o_aside {
-    flex: 0 0 auto !important;
+    flex: 1 0 100% !important;   // own row, below sheet
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
