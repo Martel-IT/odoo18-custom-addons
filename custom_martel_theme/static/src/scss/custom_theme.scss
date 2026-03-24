@@ -154,26 +154,6 @@ a, a:not([href]):not([class]) {
         font-size: 15px !important;
         letter-spacing: 0.3px !important;
         text-decoration: none !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-
-        // Martel "M" monogram badge
-        &::before {
-            content: 'M';
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 26px;
-            height: 26px;
-            background: rgba(255, 255, 255, 0.18);
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 800;
-            color: #ffffff;
-            flex-shrink: 0;
-        }
     }
 
     // ── Nav sections (menu entries in the horizontal bar) ───────────────────
@@ -599,45 +579,27 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
 }
 
 // =============================================================================
-// 4. FORM VIEW – CHATTER MOVED TO BOTTOM (all screen sizes)
-//
-// Strategy: flex-wrap on the container + flex-basis:100% on both sheet and
-// chatter. This forces each child onto its own "row" regardless of what
-// flex-direction Odoo or its media queries set. More robust than fighting
-// over flex-direction at every breakpoint.
+// 4. FORM VIEW – CHATTER BELOW (all screen sizes)
 // =============================================================================
 
-// ── Form container: wrapping flex ─────────────────────────────────────────────
 .o_form_view .o_form_view_container {
     display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: flex-start !important;
-    align-content: flex-start !important;
+    flex-direction: column !important;
     height: auto !important;
     min-height: 0 !important;
 }
 
-// Keep the override at every Bootstrap breakpoint
-@media (min-width: 576px) {
-    .o_form_view .o_form_view_container {
-        flex-wrap: wrap !important;
-    }
-}
-
-// ── Form sheet: full-width "row" ───────────────────────────────────────────────
 .o_form_view .o_form_view_container .o_form_sheet_bg {
-    flex: 1 0 100% !important;   // grow, don't shrink, 100% basis → own row
+    flex: 1 1 auto !important;
     min-height: 300px !important;
     width: 100% !important;
     max-width: 100% !important;
     border-right: none !important;
-    // No overflow-y here: let content flow naturally
 }
 
-// ── Chatter: full-width strip below the sheet ─────────────────────────────────
 .o_form_view .o_form_view_container .o-mail-Form-chatter,
 .o_form_view .o_form_view_container .o_aside {
-    flex: 1 0 100% !important;   // own row, below sheet
+    flex: 0 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -648,7 +610,6 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     padding-top: 12px !important;
 }
 
-// ── Chatter inner thread: natural height within the cap ───────────────────────
 .o-mail-Form-chatter .o-mail-Thread {
     max-height: none !important;
     overflow: visible !important;
