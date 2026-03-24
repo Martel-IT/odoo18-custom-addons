@@ -31,15 +31,20 @@
         <field name="inherit_id" ref="project.edit_project"/>
         <field name="priority">24</field>
         <field name="arch" type="xml">
-            <xpath expr="//settings/block[last()]" position="after">
-                <block title="Timesheet Report">
-                    <setting>
-                        <field name="excl_from_printed_timesheets"/>
-                        <div class="text-muted">
-                            Time written on this project will not be shown on the timesheet report.
+            <xpath expr="//page[@name='settings']" position="inside">
+                <group string="Timesheet Report" name="group_timesheet_report" col="1" class="row mt16 o_settings_container">
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="excl_from_printed_timesheets"/>
                         </div>
-                    </setting>
-                </block>
+                        <div class="o_setting_right_pane">
+                            <label for="excl_from_printed_timesheets" string="Exclude from Timesheet Report"/>
+                            <div class="text-muted">
+                                Time written on this project will not be shown on the timesheet report.
+                            </div>
+                        </div>
+                    </div>
+                </group>
             </xpath>
         </field>
     </record>
