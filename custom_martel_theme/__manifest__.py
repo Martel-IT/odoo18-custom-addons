@@ -17,6 +17,7 @@
         'web.assets_backend': [
             'custom_martel_theme/static/src/scss/custom_theme.scss',
             'custom_martel_theme/static/src/js/weekend_highlighter.js',
+            'custom_martel_theme/static/src/js/sidebar_logo.js',
         ],
     },
     'installable': True,

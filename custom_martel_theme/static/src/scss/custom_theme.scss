@@ -13,9 +13,84 @@
     --martel-weekend-border: #d8dde0;
     --martel-weekend-text:   #8a9aa0;
 
-    // Override Odoo's default purple navbar entry background
+    // ── Override Odoo's default purple (#71639e / #66598f) everywhere ──────
     --NavBar-entry-backgroundColor: transparent;
     --NavBar-entry-color:           rgba(255, 255, 255, 0.88);
+
+    // Bootstrap btn-primary / btn-outline-primary CSS variables
+    --btn-color:                    #ffffff;
+    --btn-bg:                       #284b55;
+    --btn-border-color:             #284b55;
+    --btn-hover-color:              #ffffff;
+    --btn-hover-bg:                 #1c363e;
+    --btn-hover-border-color:       #1c363e;
+    --btn-focus-shadow-rgb:         40, 75, 85;
+    --btn-active-color:             #ffffff;
+    --btn-active-bg:                #1c363e;
+    --btn-active-border-color:      #1c363e;
+    --btn-disabled-color:           #284b55;
+    --btn-disabled-border-color:    #284b55;
+
+    // Odoo's own primary color token (used by many components)
+    --o-color-primary:              #284b55;
+    --color-primary:                #284b55;
+}
+
+// ── btn-outline-primary: replace all purple variables ────────────────────────
+.btn-outline-primary {
+    --btn-color:             #284b55 !important;
+    --btn-border-color:      #284b55 !important;
+    --btn-hover-color:       #ffffff !important;
+    --btn-hover-bg:          #284b55 !important;
+    --btn-hover-border-color:#284b55 !important;
+    --btn-focus-shadow-rgb:  40, 75, 85 !important;
+    --btn-active-color:      #ffffff !important;
+    --btn-active-bg:         #1c363e !important;
+    --btn-active-border-color:#1c363e !important;
+    --btn-disabled-color:    #284b55 !important;
+    --btn-disabled-border-color: #284b55 !important;
+
+    color: #284b55 !important;
+    border-color: #284b55 !important;
+
+    &:hover, &:focus, &:active, &.active {
+        color: #ffffff !important;
+        background-color: #284b55 !important;
+        border-color: #284b55 !important;
+    }
+}
+
+// ── btn-link with primary color (text links styled as buttons) ────────────────
+.btn-link.btn-primary,
+.btn-link.text-primary {
+    color: #284b55 !important;
+
+    &:hover, &:focus, &.focus {
+        color: #1c363e !important;
+    }
+}
+
+// ── Form URI links (Many2one / related field clickable links) ─────────────────
+.o_form_view .o_form_uri,
+.o_form_view .o_form_uri > span:first-child,
+.o_form_uri {
+    color: #284b55 !important;
+
+    &:hover {
+        color: #1c363e !important;
+    }
+}
+
+// ── text-primary utility class ────────────────────────────────────────────────
+.text-primary {
+    color: #284b55 !important;
+}
+
+// ── Any remaining hardcoded Odoo purple ──────────────────────────────────────
+// These catch stray inline styles or Odoo components that bypass variables
+[style*="#71639e"],
+[style*="#66598f"] {
+    color: #284b55 !important;
 }
 
 // =============================================================================
@@ -180,64 +255,133 @@
 //    Odoo 18 classes: .o_app_menu_sidebar  and  .o_burger_menu
 // =============================================================================
 
-$martel-sidebar-bg: #182830;   // very dark teal-black for sidebar body
+$martel-sidebar-bg:        #1e3530;   // deep green body
+$martel-sidebar-top:       #152820;   // darker top section
+$martel-sidebar-hover:     rgba(255, 255, 255, 0.08);
+$martel-sidebar-active:    rgba(255, 255, 255, 0.14);
+$martel-sidebar-border:    rgba(255, 255, 255, 0.10);
 
 // ── Sidebar containers ───────────────────────────────────────────────────────
 .o_app_menu_sidebar,
 .o_burger_menu {
-    background-color: $martel-sidebar-bg !important;
+    background: linear-gradient(180deg, $martel-sidebar-top 0%, $martel-sidebar-bg 100%) !important;
+    border-right: 1px solid $martel-sidebar-border !important;
+    display: flex !important;
+    flex-direction: column !important;
 
-    // Top bar (logo / app name + close button)
+    // ── Top bar (app name + close button) ─────────────────────────────────────
     .o_sidebar_topbar {
-        background-color: var(--martel-primary-dark) !important;
+        background-color: $martel-sidebar-top !important;
         color: #ffffff !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-bottom: 1px solid $martel-sidebar-border !important;
+        padding: 10px 14px !important;
 
         .dropdown-toggle {
             color: #ffffff !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
         }
 
         .o_sidebar_close {
-            color: rgba(255, 255, 255, 0.8) !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+            border-radius: 6px !important;
 
             &:hover {
                 color: #ffffff !important;
-                background-color: rgba(255, 255, 255, 0.1) !important;
+                background-color: $martel-sidebar-hover !important;
             }
         }
     }
 
     // ── App list content area ─────────────────────────────────────────────────
     .o_burger_menu_content {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        padding: 6px 8px !important;
+
         &.o_burger_menu_app {
-            background-color: $martel-sidebar-bg !important;
+            background-color: transparent !important;
         }
 
-        // Default item text
+        // ── Each app item row (icon + label) ──────────────────────────────────
+        li {
+            list-style: none !important;
+            margin: 2px 0 !important;
+        }
+
         li, button, a {
-            color: rgba(255, 255, 255, 0.82) !important;
+            color: rgba(255, 255, 255, 0.85) !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            text-decoration: none !important;
+            transition: background 0.15s ease, color 0.15s ease !important;
 
             &:hover {
                 color: #ffffff !important;
-                background-color: rgba(255, 255, 255, 0.07) !important;
-                border-radius: 6px !important;
+                background-color: $martel-sidebar-hover !important;
             }
+        }
+
+        // ── App icon ─────────────────────────────────────────────────────────
+        .o_app_icon,
+        img.o_app_icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            object-fit: contain !important;
+            flex-shrink: 0 !important;
         }
     }
 
-    // ── Nav entries (secondary menu items rendered inside the sidebar) ─────────
+    // ── Nav entries (secondary menu items inside sidebar) ─────────────────────
     .o_nav_entry {
-        color: rgba(255, 255, 255, 0.82) !important;
-        border-radius: 6px !important;
+        color: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        font-size: 13.5px !important;
+        transition: background 0.15s ease !important;
 
         &:hover, &:focus {
             color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.08) !important;
+            background-color: $martel-sidebar-hover !important;
         }
 
         &.active, &[aria-current="page"] {
-            background-color: var(--martel-primary) !important;
+            background-color: $martel-sidebar-active !important;
             color: #ffffff !important;
+            font-weight: 600 !important;
+            border-left: 3px solid rgba(255, 255, 255, 0.5) !important;
+        }
+    }
+
+    // ── Company logo footer injected by JS ────────────────────────────────────
+    .martel_sidebar_logo {
+        flex-shrink: 0 !important;
+        padding: 14px 16px !important;
+        border-top: 1px solid $martel-sidebar-border !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: $martel-sidebar-top !important;
+
+        img {
+            max-height: 40px !important;
+            max-width: 130px !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
+            opacity: 0.85 !important;
+            filter: brightness(0) invert(1) !important; // white version on dark bg
+            transition: opacity 0.2s ease !important;
+
+            &:hover {
+                opacity: 1 !important;
+            }
         }
     }
 }

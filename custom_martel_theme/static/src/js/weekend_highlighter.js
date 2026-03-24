@@ -66,31 +66,54 @@ function markWeekendColumns(root) {
 }
 
 // ── Flexitime: color the "Difference" column ─────────────────────────────────
+//
+// Handles two table structures:
+//   A) Standard: <thead><tr><th>…</th></tr></thead>
+//   B) attendanceTable: no <thead>, header <th>s are inside <tbody> rows
+//
 function colorFlextimeDifference(root) {
     if (!root) return;
     const el = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
 
-    // Find every table that has a "Difference" header
+    // Cast wide net: any table inside the form or notebook tabs,
+    // including <table class="attendanceTable">
     const tables = el.querySelectorAll(
-        ".o_notebook .tab-pane table, .o_form_sheet table"
+        ".o_notebook .tab-pane table, " +
+        ".o_form_sheet table, " +
+        "table.attendanceTable"
     );
 
     tables.forEach((table) => {
-        const headerRow = table.querySelector("thead tr");
+        // ── Find the header row (supports both thead and headerless tables) ──
+        let headerRow = table.querySelector("thead tr");
+
+        if (!headerRow) {
+            // Fallback: first row that contains at least one <th>
+            for (const row of table.querySelectorAll("tr")) {
+                if (row.querySelector("th")) {
+                    headerRow = row;
+                    break;
+                }
+            }
+        }
+
         if (!headerRow) return;
 
-        // Find the column index of "Difference"
+        // ── Find "Difference" column index ───────────────────────────────────
         let diffIdx = -1;
-        headerRow.querySelectorAll("th").forEach((th, idx) => {
-            const txt = (th.innerText || th.textContent || "").trim().toLowerCase();
+        headerRow.querySelectorAll("th, td").forEach((cell, idx) => {
+            const txt = (cell.innerText || cell.textContent || "").trim().toLowerCase();
             if (txt === "difference") diffIdx = idx;
         });
 
         if (diffIdx === -1) return;
 
-        // Color each data row's Difference cell
-        table.querySelectorAll("tbody tr").forEach((row) => {
+        // ── Color every data row's Difference cell ───────────────────────────
+        table.querySelectorAll("tr").forEach((row) => {
+            // Skip pure header rows (all cells are <th>)
             const cells = row.querySelectorAll("td");
+            if (!cells.length) return;
+
             const cell = cells[diffIdx];
             if (!cell) return;
 
@@ -125,11 +148,13 @@ function initWeekendObserver() {
                 if (
                     node.matches(
                         ".o_grid_renderer, .o_timesheet_container, " +
-                        ".o_notebook, .tab-pane, .o_form_sheet, table"
+                        ".o_notebook, .tab-pane, .o_form_sheet, " +
+                        "table, table.attendanceTable"
                     ) ||
                     node.querySelector(
                         ".o_grid_renderer, .o_timesheet_container, " +
-                        ".o_notebook, .o_form_sheet, table"
+                        ".o_notebook, .o_form_sheet, " +
+                        "table, table.attendanceTable"
                     )
                 ) {
                     relevant = true;
