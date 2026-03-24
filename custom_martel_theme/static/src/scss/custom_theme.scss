@@ -580,16 +580,19 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
 
 // =============================================================================
 // 4. FORM VIEW – CHATTER BELOW (all screen sizes)
+//
+// Odoo 18 sets d-flex + flex-nowrap + h-100 directly on .o_form_renderer via
+// OWL. We override those three Bootstrap utilities here.
 // =============================================================================
 
-.o_form_view .o_form_view_container {
-    display: flex !important;
-    flex-direction: column !important;
-    height: auto !important;
+.o_form_renderer {
+    flex-direction: column !important;   // override Bootstrap flex-nowrap direction
+    flex-wrap: nowrap !important;        // keep nowrap — column direction is enough
+    height: auto !important;            // override h-100 so sheet can grow freely
     min-height: 0 !important;
 }
 
-.o_form_view .o_form_view_container .o_form_sheet_bg {
+.o_form_renderer > .o_form_sheet_bg {
     flex: 1 1 auto !important;
     min-height: 300px !important;
     width: 100% !important;
@@ -597,8 +600,8 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     border-right: none !important;
 }
 
-.o_form_view .o_form_view_container .o-mail-Form-chatter,
-.o_form_view .o_form_view_container .o_aside {
+.o_form_renderer > .o-mail-Form-chatter,
+.o_form_renderer > .o_aside {
     flex: 0 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -849,4 +852,68 @@ td.o_diff_positive {
 
 .nav-tabs .nav-link:hover {
     color: var(--martel-primary-light) !important;
+}
+
+// =============================================================================
+// 11. SETTINGS PAGE – LEFT TAB SIDEBAR
+// =============================================================================
+
+.settings_tab {
+    // Narrower than default
+    width: 160px !important;
+    min-width: 160px !important;
+    flex: 0 0 160px !important;
+
+    // Full height: stick from top to bottom of the settings content
+    align-self: stretch !important;
+    min-height: 100% !important;
+    position: sticky !important;
+    top: 0 !important;
+
+    // Martel green theme
+    background: linear-gradient(180deg, #152820 0%, #1e3530 100%) !important;
+    border-right-color: rgba(255, 255, 255, 0.10) !important;
+
+    // Each tab link
+    .tab {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 8px 10px !important;
+        color: rgba(255, 255, 255, 0.80) !important;
+        font-size: 12.5px !important;
+        font-weight: 500 !important;
+        border-radius: 6px !important;
+        margin: 2px 6px !important;
+        text-decoration: none !important;
+        transition: background 0.14s ease, color 0.14s ease !important;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+        }
+
+        &.selected {
+            background-color: rgba(255, 255, 255, 0.14) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+
+        // App icon (background-image set inline)
+        .icon {
+            width: 22px !important;
+            height: 22px !important;
+            min-width: 22px !important;
+            flex-shrink: 0 !important;
+            filter: brightness(0) invert(1) !important;
+            background-size: contain !important;
+        }
+
+        .app_name {
+            font-size: 12.5px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+    }
 }
