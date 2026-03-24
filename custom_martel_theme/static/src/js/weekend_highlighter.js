@@ -67,68 +67,85 @@ function markWeekendColumns(root) {
 
 // ── Flexitime: color the "Difference" column ─────────────────────────────────
 //
+// The Flexitime Analysis tab renders its table inside an <iframe> (a complete
+// HTML document). CSS classes from the main document don't reach it, so we
+// apply INLINE styles directly on each cell.
+//
 // Handles two table structures:
 //   A) Standard: <thead><tr><th>…</th></tr></thead>
-//   B) attendanceTable: no <thead>, header <th>s are inside <tbody> rows
+//   B) attendanceTable (iframe): no <thead>, <th>s inside <tbody> rows
 //
+
+const DIFF_NEG_STYLE = "background-color:rgba(220,53,69,0.15);color:#b02030;font-weight:600;";
+const DIFF_POS_STYLE = "background-color:rgba(25,135,84,0.13);color:#146c43;font-weight:600;";
+
+function _applyDiffStyles(table) {
+    // ── Find header row ───────────────────────────────────────────────────────
+    let headerRow = table.querySelector("thead tr");
+    if (!headerRow) {
+        for (const row of table.querySelectorAll("tr")) {
+            if (row.querySelector("th")) { headerRow = row; break; }
+        }
+    }
+    if (!headerRow) return;
+
+    // ── Find "Difference" column index ────────────────────────────────────────
+    let diffIdx = -1;
+    headerRow.querySelectorAll("th, td").forEach((cell, idx) => {
+        if ((cell.textContent || "").trim().toLowerCase() === "difference") diffIdx = idx;
+    });
+    if (diffIdx === -1) return;
+
+    // ── Apply inline styles to every data row ─────────────────────────────────
+    table.querySelectorAll("tr").forEach((row) => {
+        const cells = row.querySelectorAll("td");
+        if (!cells.length) return;          // skip header-only rows
+        const cell = cells[diffIdx];
+        if (!cell) return;
+
+        const raw = (cell.textContent || "").trim();
+
+        if (!raw || raw === "00:00" || raw === "-") {
+            cell.style.cssText = cell.style.cssText
+                .replace(/background-color:[^;]+;?/g, "")
+                .replace(/color:[^;]+;?/g, "")
+                .replace(/font-weight:[^;]+;?/g, "");
+        } else if (raw.startsWith("-")) {
+            cell.style.cssText = DIFF_NEG_STYLE;
+        } else {
+            cell.style.cssText = DIFF_POS_STYLE;
+        }
+    });
+}
+
 function colorFlextimeDifference(root) {
     if (!root) return;
     const el = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
 
-    // Cast wide net: any table inside the form or notebook tabs,
-    // including <table class="attendanceTable">
-    const tables = el.querySelectorAll(
-        ".o_notebook .tab-pane table, " +
-        ".o_form_sheet table, " +
-        "table.attendanceTable"
-    );
+    // ── Main document tables ──────────────────────────────────────────────────
+    el.querySelectorAll(
+        ".o_notebook .tab-pane table, .o_form_sheet table, table.attendanceTable"
+    ).forEach(_applyDiffStyles);
 
-    tables.forEach((table) => {
-        // ── Find the header row (supports both thead and headerless tables) ──
-        let headerRow = table.querySelector("thead tr");
+    // ── Tables inside same-origin iframes ─────────────────────────────────────
+    el.querySelectorAll("iframe").forEach((iframe) => {
+        try {
+            const iDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (!iDoc) return;
 
-        if (!headerRow) {
-            // Fallback: first row that contains at least one <th>
-            for (const row of table.querySelectorAll("tr")) {
-                if (row.querySelector("th")) {
-                    headerRow = row;
-                    break;
-                }
-            }
-        }
-
-        if (!headerRow) return;
-
-        // ── Find "Difference" column index ───────────────────────────────────
-        let diffIdx = -1;
-        headerRow.querySelectorAll("th, td").forEach((cell, idx) => {
-            const txt = (cell.innerText || cell.textContent || "").trim().toLowerCase();
-            if (txt === "difference") diffIdx = idx;
-        });
-
-        if (diffIdx === -1) return;
-
-        // ── Color every data row's Difference cell ───────────────────────────
-        table.querySelectorAll("tr").forEach((row) => {
-            // Skip pure header rows (all cells are <th>)
-            const cells = row.querySelectorAll("td");
-            if (!cells.length) return;
-
-            const cell = cells[diffIdx];
-            if (!cell) return;
-
-            const raw = (cell.innerText || cell.textContent || "").trim();
-
-            cell.classList.remove("o_diff_negative", "o_diff_positive");
-
-            if (!raw || raw === "00:00" || raw === "-") return;
-
-            if (raw.startsWith("-")) {
-                cell.classList.add("o_diff_negative");
+            // If the iframe is still loading, wait for it
+            if (iDoc.readyState === "loading") {
+                iframe.addEventListener("load", () => {
+                    iDoc.querySelectorAll("table.attendanceTable, table")
+                        .forEach(_applyDiffStyles);
+                }, { once: true });
             } else {
-                cell.classList.add("o_diff_positive");
+                iDoc.querySelectorAll("table.attendanceTable, table")
+                    .forEach(_applyDiffStyles);
             }
-        });
+        } catch (_) {
+            // Cross-origin iframe – skip silently
+        }
     });
 }
 
@@ -149,12 +166,12 @@ function initWeekendObserver() {
                     node.matches(
                         ".o_grid_renderer, .o_timesheet_container, " +
                         ".o_notebook, .tab-pane, .o_form_sheet, " +
-                        "table, table.attendanceTable"
+                        "table, table.attendanceTable, iframe"
                     ) ||
                     node.querySelector(
                         ".o_grid_renderer, .o_timesheet_container, " +
                         ".o_notebook, .o_form_sheet, " +
-                        "table, table.attendanceTable"
+                        "table, table.attendanceTable, iframe"
                     )
                 ) {
                     relevant = true;

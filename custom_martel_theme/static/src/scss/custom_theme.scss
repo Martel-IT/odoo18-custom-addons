@@ -1,6 +1,7 @@
 // =============================================================================
 // Martel Innovate – Custom Odoo 18 Theme
-// Primary brand color: #284b55
+// Primary:   #284b55  (teal)
+// Secondary: #fce42c  (yellow) – used for hover / active / link accent
 // =============================================================================
 
 // ── CSS Custom Properties ────────────────────────────────────────────────────
@@ -9,6 +10,8 @@
     --martel-primary-dark:   #1c363e;
     --martel-primary-light:  #3a6472;
     --martel-primary-hover:  #2f5763;
+    --martel-secondary:      #fce42c;
+    --martel-secondary-dark: #d4be0f;   // darker yellow for text on light bg
     --martel-weekend-bg:     #f0f2f3;
     --martel-weekend-border: #d8dde0;
     --martel-weekend-text:   #8a9aa0;
@@ -16,18 +19,19 @@
     // ── Override Odoo's default purple (#71639e / #66598f) everywhere ──────
     --NavBar-entry-backgroundColor: transparent;
     --NavBar-entry-color:           rgba(255, 255, 255, 0.88);
+    --link-color:                   #284b55;
 
-    // Bootstrap btn-primary / btn-outline-primary CSS variables
+    // Bootstrap btn-primary CSS variables
     --btn-color:                    #ffffff;
     --btn-bg:                       #284b55;
     --btn-border-color:             #284b55;
-    --btn-hover-color:              #ffffff;
-    --btn-hover-bg:                 #1c363e;
-    --btn-hover-border-color:       #1c363e;
-    --btn-focus-shadow-rgb:         40, 75, 85;
-    --btn-active-color:             #ffffff;
-    --btn-active-bg:                #1c363e;
-    --btn-active-border-color:      #1c363e;
+    --btn-hover-color:              #1c363e;
+    --btn-hover-bg:                 #fce42c;
+    --btn-hover-border-color:       #fce42c;
+    --btn-focus-shadow-rgb:         252, 228, 44;
+    --btn-active-color:             #1c363e;
+    --btn-active-bg:                #fce42c;
+    --btn-active-border-color:      #d4be0f;
     --btn-disabled-color:           #284b55;
     --btn-disabled-border-color:    #284b55;
 
@@ -36,37 +40,56 @@
     --color-primary:                #284b55;
 }
 
-// ── btn-outline-primary: replace all purple variables ────────────────────────
+// ── btn-primary: teal base, yellow hover/active ───────────────────────────────
+.btn-primary {
+    background-color: var(--martel-primary) !important;
+    border-color: var(--martel-primary) !important;
+    color: #ffffff !important;
+
+    &:hover, &:focus {
+        background-color: var(--martel-secondary) !important;
+        border-color: var(--martel-secondary) !important;
+        color: var(--martel-primary-dark) !important;
+    }
+
+    &:active, &.active {
+        background-color: var(--martel-secondary-dark) !important;
+        border-color: var(--martel-secondary-dark) !important;
+        color: var(--martel-primary-dark) !important;
+    }
+}
+
+// ── btn-outline-primary: teal border, yellow fill on hover ───────────────────
 .btn-outline-primary {
-    --btn-color:             #284b55 !important;
-    --btn-border-color:      #284b55 !important;
-    --btn-hover-color:       #ffffff !important;
-    --btn-hover-bg:          #284b55 !important;
-    --btn-hover-border-color:#284b55 !important;
-    --btn-focus-shadow-rgb:  40, 75, 85 !important;
-    --btn-active-color:      #ffffff !important;
-    --btn-active-bg:         #1c363e !important;
-    --btn-active-border-color:#1c363e !important;
-    --btn-disabled-color:    #284b55 !important;
+    --btn-color:              #284b55 !important;
+    --btn-border-color:       #284b55 !important;
+    --btn-hover-color:        #1c363e !important;
+    --btn-hover-bg:           #fce42c !important;
+    --btn-hover-border-color: #fce42c !important;
+    --btn-focus-shadow-rgb:   252, 228, 44 !important;
+    --btn-active-color:       #1c363e !important;
+    --btn-active-bg:          #d4be0f !important;
+    --btn-active-border-color:#d4be0f !important;
+    --btn-disabled-color:     #284b55 !important;
     --btn-disabled-border-color: #284b55 !important;
 
     color: #284b55 !important;
     border-color: #284b55 !important;
 
     &:hover, &:focus, &:active, &.active {
-        color: #ffffff !important;
-        background-color: #284b55 !important;
-        border-color: #284b55 !important;
+        color: var(--martel-primary-dark) !important;
+        background-color: var(--martel-secondary) !important;
+        border-color: var(--martel-secondary) !important;
     }
 }
 
-// ── btn-link with primary color (text links styled as buttons) ────────────────
+// ── btn-link / text-link buttons ─────────────────────────────────────────────
 .btn-link.btn-primary,
 .btn-link.text-primary {
-    color: #284b55 !important;
+    color: var(--martel-primary) !important;
 
     &:hover, &:focus, &.focus {
-        color: #1c363e !important;
+        color: var(--martel-secondary-dark) !important;
     }
 }
 
@@ -74,23 +97,39 @@
 .o_form_view .o_form_uri,
 .o_form_view .o_form_uri > span:first-child,
 .o_form_uri {
-    color: #284b55 !important;
+    color: var(--martel-primary) !important;
 
     &:hover {
-        color: #1c363e !important;
+        color: var(--martel-secondary-dark) !important;
+        text-decoration: underline !important;
     }
 }
 
-// ── text-primary utility class ────────────────────────────────────────────────
+// ── Generic links ─────────────────────────────────────────────────────────────
+a, a:not([href]):not([class]) {
+    color: var(--martel-primary) !important;
+
+    &:hover {
+        color: var(--martel-secondary-dark) !important;
+    }
+}
+
+// ── text-primary utility ──────────────────────────────────────────────────────
 .text-primary {
-    color: #284b55 !important;
+    color: var(--martel-primary) !important;
+}
+
+// ── Focus ring: yellow instead of purple ─────────────────────────────────────
+.btn:focus-visible,
+.btn-primary:focus,
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.25rem rgba(252, 228, 44, 0.45) !important;
 }
 
 // ── Any remaining hardcoded Odoo purple ──────────────────────────────────────
-// These catch stray inline styles or Odoo components that bypass variables
 [style*="#71639e"],
 [style*="#66598f"] {
-    color: #284b55 !important;
+    color: var(--martel-primary) !important;
 }
 
 // =============================================================================
@@ -247,6 +286,60 @@
     .breadcrumb-item.active,
     .breadcrumb-item a {
         color: var(--martel-primary) !important;
+    }
+}
+
+// =============================================================================
+// 2a. APP SWITCHER DROPDOWN (⊞ grid icon in the top-left navbar)
+//     Popover with class .o-dropdown--menu containing .o_app links
+// =============================================================================
+
+.o-dropdown--menu.dropdown-menu:has(a.o_app),
+.o_popover.dropdown-menu:has(a.o_app) {
+    background: linear-gradient(160deg, #152820 0%, #1e3530 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.30) !important;
+    border-radius: 10px !important;
+    padding: 8px !important;
+    min-width: 200px !important;
+
+    // ── Each app link ─────────────────────────────────────────────────────────
+    a.o_app,
+    a.o-dropdown-item.o_app {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 7px 10px !important;
+        border-radius: 7px !important;
+        color: rgba(255, 255, 255, 0.88) !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        transition: background 0.14s ease, color 0.14s ease !important;
+
+        &:hover,
+        &:focus,
+        &.focus {
+            background-color: rgba(255, 255, 255, 0.10) !important;
+            color: #ffffff !important;
+        }
+
+        &.active,
+        &[aria-current="page"] {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+
+        // App icon (img or .o_app_icon inside the link)
+        img,
+        .o_app_icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            object-fit: contain !important;
+            flex-shrink: 0 !important;
+        }
     }
 }
 
@@ -467,14 +560,7 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     color: var(--martel-primary) !important;
 }
 
-// Links and accents
-a, a:not([href]):not([class]) {
-    color: var(--martel-primary) !important;
 
-    &:hover {
-        color: var(--martel-primary-dark) !important;
-    }
-}
 
 // Checkbox / toggle accent
 .form-check-input:checked {
@@ -506,45 +592,57 @@ a, a:not([href]):not([class]) {
 }
 
 // =============================================================================
-// 4. FORM VIEW – CHATTER MOVED TO BOTTOM
+// 4. FORM VIEW – CHATTER MOVED TO BOTTOM (all screen sizes)
+//
+// Strategy: force flex-column at every breakpoint so the chatter always
+// stacks below the sheet. The sheet gets min-height: 300px so it can never
+// collapse to zero on tall/wide viewports.
 // =============================================================================
 
-// Flip form container to column so chatter stacks under the sheet.
+// ── Form container: column at ALL breakpoints ─────────────────────────────────
 .o_form_view .o_form_view_container {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    height: 100% !important;
+    // Do NOT use height: 100% – it collapses the sheet on wide screens.
+    // Let the container grow naturally with its content.
+    height: auto !important;
+    min-height: 0 !important;
 }
 
-// Main form sheet: takes all remaining space, scrollable.
-// min-height: 0 is critical for flex column – without it, the item
-// refuses to shrink below its content size and the chatter gets pushed out.
+// Override Odoo's responsive breakpoints that switch to row (sidebar) layout
+@media (min-width: 576px) {
+    .o_form_view .o_form_view_container {
+        flex-direction: column !important;
+    }
+}
+
+// ── Form sheet: always visible, takes remaining space ─────────────────────────
 .o_form_view .o_form_view_container .o_form_sheet_bg {
     flex: 1 1 auto !important;
-    min-height: 0 !important;
+    // Guarantee the sheet is never hidden on large screens
+    min-height: 300px !important;
     width: 100% !important;
     max-width: 100% !important;
     border-right: none !important;
     overflow-y: auto !important;
 }
 
-// Chatter: fixed-height strip at the bottom, internally scrollable.
-// flex: 0 0 auto prevents it from growing and stealing space from the form.
+// ── Chatter: capped strip at the bottom ──────────────────────────────────────
 .o_form_view .o_form_view_container .o-mail-Form-chatter,
 .o_form_view .o_form_view_container .o_aside {
     flex: 0 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    max-height: 480px !important;
+    max-height: 400px !important;
     overflow-y: auto !important;
     border-left: none !important;
     border-top: 1px solid #dee2e6 !important;
-    padding-top: 16px !important;
+    padding-top: 12px !important;
 }
 
-// Chatter inner thread: allow natural height within the 480px cap
+// ── Chatter inner thread: natural height within the cap ───────────────────────
 .o-mail-Form-chatter .o-mail-Thread {
     max-height: none !important;
     overflow: visible !important;
