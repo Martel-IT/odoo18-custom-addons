@@ -12,46 +12,158 @@
     --martel-weekend-bg:     #f0f2f3;
     --martel-weekend-border: #d8dde0;
     --martel-weekend-text:   #8a9aa0;
+
+    // Override Odoo's default purple navbar entry background
+    --NavBar-entry-backgroundColor: transparent;
+    --NavBar-entry-color:           rgba(255, 255, 255, 0.88);
 }
 
 // =============================================================================
 // 1. TOP NAVBAR
 // =============================================================================
 .o_main_navbar {
-    background-color: var(--martel-primary) !important;
-    border-bottom: none !important;
+    background: linear-gradient(135deg, var(--martel-primary-dark) 0%, var(--martel-primary) 100%) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
+    min-height: 46px !important;
 
+    // Override the Odoo CSS variable for nav entry bg (prevents purple bleed-through)
+    --NavBar-entry-backgroundColor: transparent;
+    --NavBar-entry-color: rgba(255, 255, 255, 0.88);
+
+    // ── Brand / App name ────────────────────────────────────────────────────
     .o_menu_brand,
     .o_menu_brand:hover,
     .o_menu_brand:focus {
         color: #ffffff !important;
-        font-weight: 600;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        letter-spacing: 0.3px !important;
+        text-decoration: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+
+        // Martel "M" monogram badge
+        &::before {
+            content: 'M';
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+            flex-shrink: 0;
+        }
     }
 
-    // Nav sections / app switcher icon
+    // ── Nav sections (menu entries in the horizontal bar) ───────────────────
+    .o_menu_sections {
+        .o_nav_entry,
+        .dropdown-toggle {
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: rgba(255, 255, 255, 0.88) !important;
+            border-radius: 6px !important;
+            padding: 4px 10px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            transition: background 0.15s ease, color 0.15s ease !important;
+
+            &:hover,
+            &:focus {
+                background: rgba(255, 255, 255, 0.12) !important;
+                color: #ffffff !important;
+                border-color: rgba(255, 255, 255, 0.15) !important;
+            }
+
+            &.active,
+            &[aria-current="page"],
+            &.o_current {
+                background: rgba(255, 255, 255, 0.18) !important;
+                color: #ffffff !important;
+                border-color: rgba(255, 255, 255, 0.25) !important;
+                font-weight: 600 !important;
+            }
+        }
+
+        // ── Chevron indicator on dropdown-toggle items ───────────────────────
+        // Plain nav entries (no submenu) → no chevron
+        .o_nav_entry:not(.dropdown-toggle)::after {
+            display: none !important;
+        }
+
+        // Items with a submenu → show a small down chevron
+        .dropdown-toggle {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+
+            // Bootstrap resets the default caret – re-enable with a custom one
+            &::after {
+                display: inline-block !important;
+                content: '' !important;
+                width: 0 !important;
+                height: 0 !important;
+                border-left: 4px solid transparent !important;
+                border-right: 4px solid transparent !important;
+                border-top: 5px solid rgba(255, 255, 255, 0.7) !important;
+                margin-left: 2px !important;
+                vertical-align: middle !important;
+                transition: transform 0.18s ease, border-top-color 0.15s ease !important;
+                flex-shrink: 0 !important;
+            }
+
+            // Rotate chevron when menu is open
+            &[aria-expanded="true"]::after {
+                transform: rotate(180deg) !important;
+                border-top-color: #ffffff !important;
+            }
+
+            &:hover::after {
+                border-top-color: #ffffff !important;
+            }
+        }
+    }
+
+    // ── App switcher / home toggle ───────────────────────────────────────────
     .o_navbar_apps_menu .o_dropdown_title,
     .o_home_menu_toggle .o_icon_button {
         color: #ffffff !important;
     }
 
-    .o_icon_button,
-    .o_icon_button:hover {
-        color: rgba(255, 255, 255, 0.85) !important;
+    .o_icon_button {
+        color: rgba(255, 255, 255, 0.82) !important;
+        border-radius: 6px !important;
+        transition: background 0.15s ease !important;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            color: #ffffff !important;
+        }
     }
 
-    .o_icon_button:hover {
-        background-color: rgba(255, 255, 255, 0.12) !important;
-        color: #ffffff !important;
-    }
-
+    // ── Notification badge ───────────────────────────────────────────────────
     .o_notification_counter {
         background-color: #e74c3c !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
     }
 
-    // Gear / settings / debug icons
+    // ── Gear / debug / user menu ─────────────────────────────────────────────
     .o_debug_manager button,
     .o_user_menu .o_icon_button {
-        color: rgba(255, 255, 255, 0.85) !important;
+        color: rgba(255, 255, 255, 0.82) !important;
+    }
+
+    // ── User menu avatar initials ────────────────────────────────────────────
+    .o_user_menu .o_icon_button .o_avatar {
+        border: 2px solid rgba(255, 255, 255, 0.4) !important;
     }
 }
 
@@ -350,49 +462,85 @@ a, a:not([href]):not([class]) {
 
 // =============================================================================
 // 6. WEEKEND COLUMNS (Saturday & Sunday) – grey background
-//    JS adds .o_weekend class to th/td elements; this is the CSS part.
+//    JS (weekend_highlighter.js) adds .o_weekend to th/td; this is the CSS.
+//    Applies to:  grid view  AND  form-view Summary / Details tables
 // =============================================================================
 
-// Applied via JS patch (see weekend_highlighter.js)
-.o_grid_renderer th.o_weekend,
-.o_grid_renderer td.o_weekend {
+// ── Universal weekend cell base ──────────────────────────────────────────────
+th.o_weekend,
+td.o_weekend {
     background-color: var(--martel-weekend-bg) !important;
     color: var(--martel-weekend-text) !important;
 }
 
-// Weekend header cell
-.o_grid_renderer thead th.o_weekend {
-    background-color: #e4e8ea !important;
-    color: var(--martel-weekend-text) !important;
-    font-style: italic;
+// Header cells – slightly darker + italic
+thead th.o_weekend {
+    background-color: #dde2e5 !important;
+    color: #7a8d93 !important;
+    font-style: italic !important;
 }
 
-// Input cells inside weekend columns should look disabled
+// ── Grid view specifics ──────────────────────────────────────────────────────
+
+// Input cells inside grid weekend columns → visually disabled
 .o_grid_renderer td.o_weekend .o_grid_cell_container,
 .o_grid_renderer td.o_weekend input {
     background-color: transparent !important;
     color: var(--martel-weekend-text) !important;
     cursor: default !important;
-    pointer-events: none !important;  // remove if weekend hours ARE allowed
+    pointer-events: none !important;
 }
 
-// Optionally show a subtle pattern on weekend cells
-.o_grid_renderer td.o_weekend::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        135deg,
-        transparent,
-        transparent 4px,
-        rgba(0, 0, 0, 0.025) 4px,
-        rgba(0, 0, 0, 0.025) 5px
-    );
-    pointer-events: none;
-}
-
+// Subtle diagonal stripe on grid weekend data cells
 .o_grid_renderer td.o_weekend {
     position: relative !important;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+            135deg,
+            transparent,
+            transparent 4px,
+            rgba(0, 0, 0, 0.022) 4px,
+            rgba(0, 0, 0, 0.022) 5px
+        );
+        pointer-events: none;
+    }
+}
+
+// ── Form-view Summary table specifics ────────────────────────────────────────
+// The Summary tab table has plain <td> cells (not grid cells).
+// Give them a stronger grey + diagonal stripe so the distinction is clear.
+
+.o_notebook .tab-pane td.o_weekend,
+.o_form_sheet td.o_weekend {
+    background-color: #eaecef !important;
+    color: #8a9aa0 !important;
+    position: relative !important;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+            135deg,
+            transparent,
+            transparent 5px,
+            rgba(0, 0, 0, 0.04) 5px,
+            rgba(0, 0, 0, 0.04) 6px
+        );
+        pointer-events: none;
+    }
+}
+
+.o_notebook .tab-pane thead th.o_weekend,
+.o_form_sheet thead th.o_weekend {
+    background-color: #d4d8dc !important;
+    color: #6b7f86 !important;
+    font-style: italic !important;
+    font-weight: 600 !important;
 }
 
 // =============================================================================
@@ -415,7 +563,24 @@ a, a:not([href]):not([class]) {
 }
 
 // =============================================================================
-// 8. LIST VIEW – minor accents
+// 8. FLEXITIME ANALYSIS – Difference column coloring
+//    JS adds .o_diff_negative / .o_diff_positive to <td> cells
+// =============================================================================
+
+td.o_diff_negative {
+    background-color: rgba(220, 53, 69, 0.12) !important;
+    color: #b02030 !important;
+    font-weight: 600 !important;
+}
+
+td.o_diff_positive {
+    background-color: rgba(25, 135, 84, 0.11) !important;
+    color: #146c43 !important;
+    font-weight: 600 !important;
+}
+
+// =============================================================================
+// 9. LIST VIEW – minor accents
 // =============================================================================
 
 .o_list_view thead {

@@ -1,112 +1,177 @@
 /** @odoo-module **/
 /**
- * Martel Innovate – Weekend Highlighter for Timesheet Grid
+ * Martel Innovate – Weekend Highlighter + Flexitime Difference Colorizer
  *
- * Adds the CSS class `o_weekend` to all <th> and <td> elements
- * whose column represents a Saturday (day 6) or Sunday (day 0).
+ * 1. Adds `o_weekend` CSS class to <th>/<td> cells whose column header
+ *    starts with "Sat" or "Sun".
  *
- * Works with both:
- *  - The standalone Grid View  (.o_grid_renderer table)
- *  - The inline timesheet sheet inside a Form View
+ * 2. In the Flexitime Analysis table, colors the "Difference" column:
+ *    - negative value (starts with "-")  → .o_diff_negative  (red bg)
+ *    - positive value (> 00:00)          → .o_diff_positive  (green bg)
+ *    - zero (00:00)                      → no class
  *
- * Uses a MutationObserver so it re-applies after OWL re-renders.
+ * Targets:
+ *  - Grid view          (.o_grid_renderer table)
+ *  - Timesheet container (.o_timesheet_container table)
+ *  - Any table inside the Summary / Details form tabs
+ *    (.o_notebook .tab-pane table  and  .o_form_sheet table)
+ *
+ * Re-runs via MutationObserver (OWL re-renders) and on tab clicks.
  */
 
-import { onWillStart, onMounted, onPatched } from "@odoo/owl";
-import { patch } from "@web/core/utils/patch";
+import { registry } from "@web/core/registry";
 
-// ── Utility: parse a date string "Mon, Sep 1" or "Sat, Sep 6" → day index ──
-function dayIndexFromHeader(text) {
-    if (!text) return -1;
+// ── Utility: is this header text a weekend day? ──────────────────────────────
+function isWeekendHeader(text) {
+    if (!text) return false;
     const t = text.trim().toLowerCase();
-    if (t.startsWith("sat")) return 6;
-    if (t.startsWith("sun")) return 0;
-    return -1;
+    return t.startsWith("sat") || t.startsWith("sun");
 }
 
-// ── Core function: mark weekend columns in a grid table ─────────────────────
+// ── Core: mark weekend columns in every matching table under `root` ──────────
 function markWeekendColumns(root) {
     if (!root) return;
 
-    const tables = root.querySelectorAll(
-        ".o_grid_renderer table, .o_timesheet_container table"
+    // Cast to Element so we can call querySelectorAll
+    const el = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
+
+    const tables = el.querySelectorAll(
+        ".o_grid_renderer table, " +
+        ".o_timesheet_container table, " +
+        ".o_notebook .tab-pane table, " +
+        ".o_form_sheet table"
     );
 
     tables.forEach((table) => {
-        // Build a map: columnIndex → isWeekend (from header row)
-        const weekendCols = new Set();
-
         const headerRow = table.querySelector("thead tr");
         if (!headerRow) return;
 
-        const headers = headerRow.querySelectorAll("th");
-        headers.forEach((th, idx) => {
-            const txt = th.innerText || th.textContent || "";
-            if (dayIndexFromHeader(txt) !== -1) {
+        // Build the set of weekend column indices from <th> cells
+        const weekendCols = new Set();
+        headerRow.querySelectorAll("th").forEach((th, idx) => {
+            if (isWeekendHeader(th.innerText || th.textContent)) {
                 weekendCols.add(idx);
             }
         });
 
         if (weekendCols.size === 0) return;
 
-        // Apply / remove class on ALL rows
-        const rows = table.querySelectorAll("tr");
-        rows.forEach((row) => {
-            const cells = row.querySelectorAll("th, td");
-            cells.forEach((cell, idx) => {
-                if (weekendCols.has(idx)) {
-                    cell.classList.add("o_weekend");
-                } else {
-                    cell.classList.remove("o_weekend");
-                }
+        // Apply / remove class on every row
+        table.querySelectorAll("tr").forEach((row) => {
+            row.querySelectorAll("th, td").forEach((cell, idx) => {
+                cell.classList.toggle("o_weekend", weekendCols.has(idx));
             });
         });
     });
 }
 
-// ── MutationObserver: watch the whole .o_web_client for grid re-renders ─────
+// ── Flexitime: color the "Difference" column ─────────────────────────────────
+function colorFlextimeDifference(root) {
+    if (!root) return;
+    const el = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
+
+    // Find every table that has a "Difference" header
+    const tables = el.querySelectorAll(
+        ".o_notebook .tab-pane table, .o_form_sheet table"
+    );
+
+    tables.forEach((table) => {
+        const headerRow = table.querySelector("thead tr");
+        if (!headerRow) return;
+
+        // Find the column index of "Difference"
+        let diffIdx = -1;
+        headerRow.querySelectorAll("th").forEach((th, idx) => {
+            const txt = (th.innerText || th.textContent || "").trim().toLowerCase();
+            if (txt === "difference") diffIdx = idx;
+        });
+
+        if (diffIdx === -1) return;
+
+        // Color each data row's Difference cell
+        table.querySelectorAll("tbody tr").forEach((row) => {
+            const cells = row.querySelectorAll("td");
+            const cell = cells[diffIdx];
+            if (!cell) return;
+
+            const raw = (cell.innerText || cell.textContent || "").trim();
+
+            cell.classList.remove("o_diff_negative", "o_diff_positive");
+
+            if (!raw || raw === "00:00" || raw === "-") return;
+
+            if (raw.startsWith("-")) {
+                cell.classList.add("o_diff_negative");
+            } else {
+                cell.classList.add("o_diff_positive");
+            }
+        });
+    });
+}
+
+// ── MutationObserver: re-run when OWL adds/removes grid/form nodes ───────────
 function initWeekendObserver() {
     const target = document.querySelector(".o_web_client") || document.body;
 
     const observer = new MutationObserver((mutations) => {
         let relevant = false;
+
         for (const m of mutations) {
-            if (m.type === "childList" && m.addedNodes.length) {
-                for (const node of m.addedNodes) {
-                    if (
-                        node.nodeType === 1 &&
-                        (node.matches(".o_grid_renderer, .o_timesheet_container") ||
-                            node.querySelector(
-                                ".o_grid_renderer, .o_timesheet_container"
-                            ))
-                    ) {
-                        relevant = true;
-                        break;
-                    }
+            if (m.type !== "childList" || !m.addedNodes.length) continue;
+
+            for (const node of m.addedNodes) {
+                if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+                if (
+                    node.matches(
+                        ".o_grid_renderer, .o_timesheet_container, " +
+                        ".o_notebook, .tab-pane, .o_form_sheet, table"
+                    ) ||
+                    node.querySelector(
+                        ".o_grid_renderer, .o_timesheet_container, " +
+                        ".o_notebook, .o_form_sheet, table"
+                    )
+                ) {
+                    relevant = true;
+                    break;
                 }
             }
             if (relevant) break;
         }
+
         if (relevant) {
-            requestAnimationFrame(() => markWeekendColumns(document));
+            requestAnimationFrame(() => {
+                markWeekendColumns(document);
+                colorFlextimeDifference(document);
+            });
         }
     });
 
     observer.observe(target, { childList: true, subtree: true });
 
-    // Initial run
-    requestAnimationFrame(() => markWeekendColumns(document));
+    // Also re-run when the user switches tabs (Summary / Details / Flexitime)
+    target.addEventListener("click", (e) => {
+        const tab = e.target.closest(".nav-link, [data-bs-toggle='tab'], .o_notebook .nav-item");
+        if (tab) {
+            // Small delay so OWL renders the new tab content first
+            setTimeout(() => {
+                markWeekendColumns(document);
+                colorFlextimeDifference(document);
+            }, 80);
+        }
+    });
+
+    // Initial scan
+    requestAnimationFrame(() => {
+        markWeekendColumns(document);
+        colorFlextimeDifference(document);
+    });
 }
 
-// ── Bootstrap: run after app is mounted ─────────────────────────────────────
-// We hook into the WebClient service lifecycle by registering a simple service.
-
-import { registry } from "@web/core/registry";
-
+// ── Service registration ─────────────────────────────────────────────────────
 const martelWeekendService = {
     dependencies: [],
-    start(env) {
-        // Wait for the first paint before attaching observer
+    start() {
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 initWeekendObserver();

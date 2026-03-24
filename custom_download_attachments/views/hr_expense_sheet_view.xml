@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherit hr.expense.sheet form view to add two print buttons
+        directly in the header (next to Pay / Reset to Draft),
+        outside the gear/cog action menu.
+    -->
+    <record id="view_hr_expense_sheet_form_martel" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.form.martel.print</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert the two buttons just before the statusbar widget -->
+            <xpath expr="//header/field[@widget='statusbar']" position="before">
+                <button name="action_print_expense_report"
+                        type="object"
+                        string="Print Report"
+                        icon="fa-print"
+                        class="btn-secondary"
+                        title="Print Expense Report PDF"/>
+                <button name="action_download_attachments_pdf"
+                        type="object"
+                        string="Print Attachments"
+                        icon="fa-paperclip"
+                        class="btn-secondary"
+                        title="Download all expense attachments as a single PDF"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
