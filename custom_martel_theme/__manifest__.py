@@ -15,6 +15,7 @@
     ],
     'data': [
         'views/hr_expense_overrides.xml',
+        'views/report_layout.xml',
     ],
     'assets': {
         'web.assets_backend': [
