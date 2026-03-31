@@ -2,68 +2,140 @@
 <odoo>
     <template id="timesheets_by_employee.report_timesheet_employee">
         <t t-call="web.html_container">
-            <t t-call="web.external_layout">
-                <t t-foreach="docs" t-as="o">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
                     <div class="page">
 
-                        <h2 class="text-center mb-4">Timesheet Report by Employees</h2>
-
-                        <!-- Header info -->
-                        <t t-if="identification">
-                            <p>
-                                <strong>Employee Name:</strong>
-                                <t t-esc="identification[0]['name']"/>
-                                <span class="ms-5">
-                                    <strong>Period:</strong>
-                                    <t t-esc="period"/>
-                                </span>
-                            </p>
-                            <p><strong>Total Hours:</strong> <t t-esc="total"/></p>
-                        </t>
-
-                        <t t-foreach="projects" t-as="project">
-                            <!-- Project header -->
-                            <div class="mt-4"
-                                 style="background:#e8f0f2; padding:6px 10px; border-left:4px solid #284b55;">
-                                <strong style="font-size:13px;">
-                                    <t t-esc="project['name']"/>
-                                </strong>
+                        <div class="container">
+                            <!-- Report Title -->
+                            <div class="row">
+                                <div class="col-12 text-center mb-4">
+                                    <h2>Timesheet Report by Employees</h2>
+                                </div>
                             </div>
 
-                            <t t-foreach="project['tasks']" t-as="task">
-                                <!-- Task header -->
-                                <p class="mt-2 mb-1" style="color:#555; font-style:italic; padding-left:8px;">
-                                    <t t-esc="task['name']"/>
-                                </p>
+                            <!-- Employee and Period Info -->
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <strong>Employee Name: </strong>
+                                    <span t-esc="employee.name"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Period: </strong>
+                                    <span t-esc="period"/>
+                                </div>
+                            </div>
 
-                                <!-- Entries table -->
-                                <table class="table table-sm table-condensed" style="margin-bottom:4px;">
-                                    <thead>
-                                        <tr style="background:#f5f5f5;">
-                                            <th style="width:110px;">Date</th>
-                                            <th>Description</th>
-                                            <th style="width:80px; text-align:right;">Hours</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr t-foreach="task['entries']" t-as="entry">
-                                            <td><t t-esc="entry['date']"/></td>
-                                            <td><t t-esc="entry['description']"/></td>
-                                            <td style="text-align:right;"><t t-esc="entry['duration']"/></td>
-                                        </tr>
-                                        <tr style="font-weight:bold; border-top:1px solid #ccc;">
-                                            <td colspan="2">Task Total:</td>
-                                            <td style="text-align:right;"><t t-esc="task['total']"/></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <!-- Total Hours -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <strong>Total Hours: </strong>
+                                    <span t-esc="timesheet_data['total_hours_display']"/>
+                                </div>
+                            </div>
 
-                                <p style="padding-left:8px; font-weight:bold; color:#284b55;">
-                                    Project Total: <t t-esc="project['total']"/>
-                                </p>
+                            <!-- Projects Loop -->
+                            <t t-foreach="timesheet_data['projects']" t-as="project">
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h4 class="bg-light p-2" t-esc="project"/>
+
+                                        <!-- Tasks with name -->
+                                        <t t-foreach="timesheet_data['projects'][project]['tasks']" t-as="task">
+                                            <t t-if="task != 'No Task'">
+                                                <div class="mt-3">
+                                                    <h5 t-esc="task"/>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th width="15%">Date</th>
+                                                                    <th width="70%">Description</th>
+                                                                    <th width="15%" class="text-right">Hours</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <t t-foreach="timesheet_data['projects'][project]['tasks'][task]['entries']" t-as="entry">
+                                                                    <tr>
+                                                                        <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
+                                                                        <td><span t-esc="entry['description']"/></td>
+                                                                        <td class="text-right"><span t-esc="entry['duration']"/></td>
+                                                                    </tr>
+                                                                </t>
+                                                                <tr class="table-light">
+                                                                    <td colspan="2" class="text-right"><strong>Task Total:</strong></td>
+                                                                    <td class="text-right">
+                                                                        <strong t-esc="timesheet_data['projects'][project]['tasks'][task]['subtotal_display']"/>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+
+                                        <!-- Entries without task -->
+                                        <t t-if="'No Task' in timesheet_data['projects'][project]['tasks']">
+                                            <div class="mt-3">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th width="15%">Date</th>
+                                                                <th width="70%">Description</th>
+                                                                <th width="15%" class="text-right">Hours</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <t t-foreach="timesheet_data['projects'][project]['tasks']['No Task']['entries']" t-as="entry">
+                                                                <tr>
+                                                                    <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
+                                                                    <td><span t-esc="entry['description']"/></td>
+                                                                    <td class="text-right"><span t-esc="entry['duration']"/></td>
+                                                                </tr>
+                                                            </t>
+                                                            <tr class="table-light">
+                                                                <td colspan="2" class="text-right"><strong>Total:</strong></td>
+                                                                <td class="text-right">
+                                                                    <strong t-esc="timesheet_data['projects'][project]['tasks']['No Task']['subtotal_display']"/>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <div class="text-right mb-4 bg-light p-2">
+                                            <strong>Project Total: </strong>
+                                            <span t-esc="timesheet_data['projects'][project]['subtotal_display']"/>
+                                        </div>
+                                    </div>
+                                </div>
                             </t>
-                        </t>
 
+                            <!-- Submission and Approval info -->
+                            <div class="row mt-5 pt-4" style="border-top: 1px solid #dee2e6;">
+                                <div class="col-6">
+                                    <p><strong>Employee:</strong> <span t-esc="employee.name"/></p>
+                                    <p t-if="timesheet_submitted_date">
+                                        <strong>Submitted on:</strong>
+                                        <span t-esc="timesheet_submitted_date" t-options="{'widget': 'datetime'}"/>
+                                    </p>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <p t-if="reviewer_name">
+                                        <strong>Reviewer:</strong>
+                                        <span t-esc="reviewer_name"/>
+                                    </p>
+                                    <p t-if="timesheet_approved_date">
+                                        <strong>Approved on:</strong>
+                                        <span t-esc="timesheet_approved_date" t-options="{'widget': 'datetime'}"/>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </t>
             </t>
