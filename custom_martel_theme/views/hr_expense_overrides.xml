@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Override Expenses Analysis pivot: default measure = Total (company currency)
+         instead of Total in Currency -->
+    <record id="hr_expense_view_pivot_martel" model="ir.ui.view">
+        <field name="name">hr.expense.pivot.martel</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_pivot"/>
+        <field name="arch" type="xml">
+            <field name="total_amount_currency" position="replace">
+                <field name="total_amount" type="measure"/>
+            </field>
+        </field>
+    </record>
+</odoo>

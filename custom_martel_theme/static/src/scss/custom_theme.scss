@@ -38,6 +38,49 @@
     // Odoo's own primary color token (used by many components)
     --o-color-primary:              #284b55;
     --color-primary:                #284b55;
+
+    // Bootstrap subtle variants – override Odoo purple tints
+    --primary-bg-subtle:            #dde8ea;
+    --primary-border-subtle:        #a8c4cb;
+    --primary-text-emphasis:        #284b55;
+    --link-color:                   #284b55;
+    --link-hover-color:             #1c363e;
+    --focus-ring-color:             rgba(40, 75, 85, 0.25);
+}
+
+// ── Login page: override Odoo purple (#714B67) ───────────────────────────────
+.btn-fill-primary,
+.btn-fill-primary.btn-primary {
+    --btn-color:              #ffffff !important;
+    --btn-bg:                 #284b55 !important;
+    --btn-border-color:       #284b55 !important;
+    --btn-hover-color:        #ffffff !important;
+    --btn-hover-bg:           #1c363e !important;
+    --btn-hover-border-color: #1c363e !important;
+    --btn-focus-shadow-rgb:   40, 75, 85 !important;
+    --btn-active-color:       #ffffff !important;
+    --btn-active-bg:          #1c363e !important;
+    --btn-active-border-color:#1c363e !important;
+    --btn-active-shadow:      inset 0 3px 5px rgba(0, 0, 0, 0.125) !important;
+    --btn-disabled-color:     #ffffff !important;
+    --btn-disabled-bg:        #284b55 !important;
+    --btn-disabled-border-color: #284b55 !important;
+
+    background-color: #284b55 !important;
+    border-color:     #284b55 !important;
+    color:            #ffffff !important;
+
+    &:hover, &:focus {
+        background-color: #1c363e !important;
+        border-color:     #1c363e !important;
+        color:            #ffffff !important;
+    }
+
+    &:active, &.active {
+        background-color: #1c363e !important;
+        border-color:     #1c363e !important;
+        color:            #ffffff !important;
+    }
 }
 
 // ── btn-primary: teal base, yellow hover/active ───────────────────────────────
@@ -81,6 +124,14 @@
         background-color: var(--martel-secondary) !important;
         border-color: var(--martel-secondary) !important;
     }
+}
+
+// ── btn-link: override Odoo purple focus shadow ───────────────────────────────
+.btn-link {
+    --btn-focus-shadow-rgb: 40, 75, 85 !important;
+    --btn-color:            var(--martel-primary) !important;
+    --btn-hover-color:      var(--martel-primary-dark) !important;
+    --btn-active-color:     var(--martel-primary-dark) !important;
 }
 
 // ── btn-link / text-link buttons ─────────────────────────────────────────────
@@ -275,15 +326,17 @@ a, a:not([href]):not([class]) {
 
 .o_main_navbar .o_menu_sections .dropdown-menu,
 .o_main_navbar .dropdown-menu {
-    background: linear-gradient(160deg, #152820 0%, #1e3530 100%) !important;
+    background: #284b55 !important;
     border: 1px solid rgba(255, 255, 255, 0.10) !important;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
     border-radius: 10px !important;
     padding: 6px !important;
     min-width: 180px !important;
     overflow: visible !important;
-    // floating offset: slightly detached from the button
+    // floating offset: slightly detached from the button, aligned left
     margin-top: 6px !important;
+    left: 5px !important;
+    right: auto !important;
 
     .dropdown-item,
     a.dropdown-item {

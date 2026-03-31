@@ -1,60 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--    Create a template for display the pdf report design-->
     <template id="timesheets_by_employee.report_timesheet_employee">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
                 <t t-foreach="docs" t-as="o">
                     <div class="page">
-                        <div style="padding-bottom:20px !important;"
-                             class="oe_structure"/>
-                        <h2 align="center">Timesheet Report by Employees</h2>
-                        <br/>
-                        <table class="table table-condensed">
-                            <tbody>
-                                <tr t-if="identification">
-                                    <th>Employee Name</th>
-                                    <td colspan="2">
-                                        <span t-esc="identification[0]['name']"/>
-                                    </td>
-                                    <th>Company Name</th>
-                                    <td>
-                                        <span t-esc="company.name"/>
-                                    </td>
-                                </tr>
-                                <tr t-if="identification">
-                                    <th>Timesheet Period</th>
-                                    <td colspan="2">
-                                        <span t-esc="period"/>
-                                    </td>
-                                    <th>Total Working Hours</th>
-                                    <td>
-                                        <span t-esc="total"/>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
 
-                        <table class="table table-condensed">
-                            <tbody>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Project</th>
-                                    <th>Worked Time</th>
-                                </tr>
-                                <tr t-foreach="timesheets" t-as="t">
-                                    <td>
-                                        <span t-esc="t['date']"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="t['project']"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="t['duration']"/>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <h2 class="text-center mb-4">Timesheet Report by Employees</h2>
+
+                        <!-- Header info -->
+                        <t t-if="identification">
+                            <p>
+                                <strong>Employee Name:</strong>
+                                <t t-esc="identification[0]['name']"/>
+                                <span class="ms-5">
+                                    <strong>Period:</strong>
+                                    <t t-esc="period"/>
+                                </span>
+                            </p>
+                            <p><strong>Total Hours:</strong> <t t-esc="total"/></p>
+                        </t>
+
+                        <t t-foreach="projects" t-as="project">
+                            <!-- Project header -->
+                            <div class="mt-4"
+                                 style="background:#e8f0f2; padding:6px 10px; border-left:4px solid #284b55;">
+                                <strong style="font-size:13px;">
+                                    <t t-esc="project['name']"/>
+                                </strong>
+                            </div>
+
+                            <t t-foreach="project['tasks']" t-as="task">
+                                <!-- Task header -->
+                                <p class="mt-2 mb-1" style="color:#555; font-style:italic; padding-left:8px;">
+                                    <t t-esc="task['name']"/>
+                                </p>
+
+                                <!-- Entries table -->
+                                <table class="table table-sm table-condensed" style="margin-bottom:4px;">
+                                    <thead>
+                                        <tr style="background:#f5f5f5;">
+                                            <th style="width:110px;">Date</th>
+                                            <th>Description</th>
+                                            <th style="width:80px; text-align:right;">Hours</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="task['entries']" t-as="entry">
+                                            <td><t t-esc="entry['date']"/></td>
+                                            <td><t t-esc="entry['description']"/></td>
+                                            <td style="text-align:right;"><t t-esc="entry['duration']"/></td>
+                                        </tr>
+                                        <tr style="font-weight:bold; border-top:1px solid #ccc;">
+                                            <td colspan="2">Task Total:</td>
+                                            <td style="text-align:right;"><t t-esc="task['total']"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <p style="padding-left:8px; font-weight:bold; color:#284b55;">
+                                    Project Total: <t t-esc="project['total']"/>
+                                </p>
+                            </t>
+                        </t>
+
                     </div>
                 </t>
             </t>

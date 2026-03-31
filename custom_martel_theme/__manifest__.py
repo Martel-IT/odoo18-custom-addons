@@ -11,8 +11,11 @@
         'web',
         'mail',
         'hr_timesheet',
+        'hr_expense',
     ],
-    'data': [],
+    'data': [
+        'views/hr_expense_overrides.xml',
+    ],
     'assets': {
         'web.assets_backend': [
             'custom_martel_theme/static/src/scss/custom_theme.scss',
