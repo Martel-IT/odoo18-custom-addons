@@ -1,7 +1,7 @@
 // =============================================================================
 // Martel Innovate – Custom Odoo 18 Theme
 // Primary:   #284b55  (teal)
-// Secondary: #fce42c  (yellow) – used for hover / active / link accent
+// Secondary: #e8b923  (amber/gold) – used for hover / active / link accent
 // =============================================================================
 
 // ── CSS Custom Properties ────────────────────────────────────────────────────
@@ -10,8 +10,8 @@
     --martel-primary-dark:   #1c363e;
     --martel-primary-light:  #3a6472;
     --martel-primary-hover:  #2f5763;
-    --martel-secondary:      #fce42c;
-    --martel-secondary-dark: #d4be0f;   // darker yellow for text on light bg
+    --martel-secondary:      #e8b923;
+    --martel-secondary-dark: #b8910f;   // darker amber for text on light bg
     --martel-weekend-bg:     #f0f2f3;
     --martel-weekend-border: #d8dde0;
     --martel-weekend-text:   #8a9aa0;
@@ -26,12 +26,12 @@
     --btn-bg:                       #284b55;
     --btn-border-color:             #284b55;
     --btn-hover-color:              #1c363e;
-    --btn-hover-bg:                 #fce42c;
-    --btn-hover-border-color:       #fce42c;
-    --btn-focus-shadow-rgb:         252, 228, 44;
+    --btn-hover-bg:                 #e8b923;
+    --btn-hover-border-color:       #e8b923;
+    --btn-focus-shadow-rgb:         232, 185, 35;
     --btn-active-color:             #1c363e;
-    --btn-active-bg:                #fce42c;
-    --btn-active-border-color:      #d4be0f;
+    --btn-active-bg:                #e8b923;
+    --btn-active-border-color:      #b8910f;
     --btn-disabled-color:           #284b55;
     --btn-disabled-border-color:    #284b55;
 
@@ -64,12 +64,12 @@
     --btn-color:              #284b55 !important;
     --btn-border-color:       #284b55 !important;
     --btn-hover-color:        #1c363e !important;
-    --btn-hover-bg:           #fce42c !important;
-    --btn-hover-border-color: #fce42c !important;
-    --btn-focus-shadow-rgb:   252, 228, 44 !important;
+    --btn-hover-bg:           #e8b923 !important;
+    --btn-hover-border-color: #e8b923 !important;
+    --btn-focus-shadow-rgb:   232, 185, 35 !important;
     --btn-active-color:       #1c363e !important;
-    --btn-active-bg:          #d4be0f !important;
-    --btn-active-border-color:#d4be0f !important;
+    --btn-active-bg:          #b8910f !important;
+    --btn-active-border-color:#b8910f !important;
     --btn-disabled-color:     #284b55 !important;
     --btn-disabled-border-color: #284b55 !important;
 
@@ -123,7 +123,7 @@ a, a:not([href]):not([class]) {
 .btn:focus-visible,
 .btn-primary:focus,
 .btn-outline-primary:focus {
-    box-shadow: 0 0 0 0.25rem rgba(252, 228, 44, 0.45) !important;
+    box-shadow: 0 0 0 0.25rem rgba(232, 185, 35, 0.45) !important;
 }
 
 // ── Any remaining hardcoded Odoo purple ──────────────────────────────────────
@@ -266,6 +266,60 @@ a, a:not([href]):not([class]) {
     .breadcrumb-item.active,
     .breadcrumb-item a {
         color: var(--martel-primary) !important;
+    }
+}
+
+// =============================================================================
+// 2z. NAVBAR SUB-MENU DROPDOWNS (e.g., Configuration ▾ in the top bar)
+// =============================================================================
+
+.o_main_navbar .o_menu_sections .dropdown-menu,
+.o_main_navbar .dropdown-menu {
+    background: linear-gradient(160deg, #152820 0%, #1e3530 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
+    border-radius: 10px !important;
+    padding: 6px !important;
+    min-width: 180px !important;
+    overflow: visible !important;
+    // floating offset: slightly detached from the button
+    margin-top: 6px !important;
+
+    .dropdown-item,
+    a.dropdown-item {
+        color: rgba(255, 255, 255, 0.88) !important;
+        border-radius: 7px !important;
+        padding: 7px 12px !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        background: transparent !important;
+        transition: background 0.14s ease, color 0.14s ease !important;
+
+        &:hover,
+        &:focus {
+            background-color: rgba(255, 255, 255, 0.10) !important;
+            color: #ffffff !important;
+        }
+
+        &.active,
+        &[aria-current="page"] {
+            background-color: rgba(232, 185, 35, 0.20) !important;
+            color: var(--martel-secondary) !important;
+            font-weight: 600 !important;
+        }
+    }
+
+    .dropdown-header {
+        color: rgba(255, 255, 255, 0.45) !important;
+        font-size: 10.5px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.7px !important;
+        padding: 6px 12px 4px !important;
+    }
+
+    .dropdown-divider {
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        margin: 4px 8px !important;
     }
 }
 
@@ -772,6 +826,32 @@ thead th.o_weekend {
 .o_form_view .o_field_one2many table {
     width: 100% !important;
     min-width: max-content;
+}
+
+// =============================================================================
+// 7b. TIMESHEET SUMMARY – header days bold + totals bold
+// =============================================================================
+
+// Day-of-week / day-number headers in the Summary tab matrix
+.o_form_view .o_field_x2many_2d_matrix .table > thead > tr > th,
+.o_form_view .o_field_x2many_2d_matrix thead th {
+    font-weight: 700 !important;
+    white-space: pre-line;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #f0f2f4;
+}
+
+// Total footer row (tfoot) + any row marked as totals
+.o_form_view .o_field_x2many_2d_matrix .table > tfoot > tr > td,
+.o_form_view .o_field_x2many_2d_matrix .table > tfoot > tr > th,
+.o_form_view .o_field_x2many_2d_matrix tfoot td,
+.o_form_view .o_field_x2many_2d_matrix tfoot th {
+    font-weight: 700 !important;
+    color: var(--martel-primary) !important;
+    background-color: rgba(40, 75, 85, 0.07) !important;
+    border-top: 2px solid var(--martel-primary-light) !important;
 }
 
 // =============================================================================
