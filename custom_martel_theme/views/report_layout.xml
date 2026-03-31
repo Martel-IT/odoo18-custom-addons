@@ -10,7 +10,7 @@
               priority="20">
 
         <!-- ── Replace the entire header div ──────────────────────────────── -->
-        <xpath expr="//div[hasclass('header')]" position="replace">
+        <xpath expr="//div[contains(@t-attf-class,'header')]" position="replace">
             <div t-attf-class="o_company_#{company.id}_layout header"
                  style="border-bottom: 3px solid #284b55; padding-bottom: 12px; margin-bottom: 4px;">
 
@@ -60,7 +60,7 @@
         </xpath>
 
         <!-- ── Replace the footer ─────────────────────────────────────────── -->
-        <xpath expr="//div[hasclass('footer')]" position="replace">
+        <xpath expr="//div[contains(@t-attf-class,'footer')]" position="replace">
             <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}"
                  style="border-top: 2px solid #284b55; padding-top: 6px;">
 
