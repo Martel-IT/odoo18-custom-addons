@@ -309,6 +309,7 @@ a, a:not([href]):not([class]) {
 // NOTE: In Odoo 18 navbar sub-menus are portal-rendered at body level as
 // .o-dropdown--menu.dropdown-menu, so .o_main_navbar as parent doesn't work.
 // We target .o-dropdown--menu.dropdown-menu and exclude the app-switcher.
+// IMPORTANT: do NOT set left/right/margin-top on portal menus – Odoo JS positions them.
 .o_main_navbar .o_menu_sections .dropdown-menu,
 .o_main_navbar .dropdown-menu,
 .o-dropdown--menu.dropdown-menu:not(:has(a.o_app)) {
@@ -319,10 +320,6 @@ a, a:not([href]):not([class]) {
     padding: 6px !important;
     min-width: 180px !important;
     overflow: visible !important;
-    // floating offset: slightly detached from the button, aligned left
-    margin-top: 6px !important;
-    left: 5px !important;
-    right: auto !important;
 
     .dropdown-item,
     a.dropdown-item {
@@ -913,18 +910,19 @@ thead th.o_weekend {
     color: var(--martel-primary) !important;
 }
 
-// Total footer row (tfoot) + any row marked as totals
-.o_form_view .o_field_x2many_2d_matrix .table > tfoot > tr > td,
-.o_form_view .o_field_x2many_2d_matrix .table > tfoot > tr > th,
+// Total footer row (tfoot) – sticky bottom, solid background
 .o_form_view .o_field_x2many_2d_matrix tfoot td,
 .o_form_view .o_field_x2many_2d_matrix tfoot th {
     font-weight: 700 !important;
     color: var(--martel-primary) !important;
-    background-color: rgba(40, 75, 85, 0.07) !important;
+    background-color: #dce8eb !important;
     border-top: 2px solid var(--martel-primary-light) !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 3 !important;
 }
 
-// Corner cell (tfoot last-child) – highest priority
+// Corner cell (tfoot last-child) – sticky right + bottom, highest priority
 .o_form_view .o_field_x2many_2d_matrix tfoot td:last-child,
 .o_form_view .o_field_x2many_2d_matrix tfoot th:last-child {
     background-color: #cddde1 !important;
