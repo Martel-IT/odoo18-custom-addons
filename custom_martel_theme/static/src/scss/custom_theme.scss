@@ -48,8 +48,9 @@
     --focus-ring-color:             rgba(40, 75, 85, 0.25);
 }
 
-// ── Override Odoo purple (#714B67) on both selectors exactly as Odoo defines them ─
-.btn-fill-primary, .btn-primary {
+// ── Override Odoo purple (#714B67) – higher specificity beats Odoo's rule ────
+html .btn-fill-primary,
+html .btn-primary {
     --btn-color:              #ffffff !important;
     --btn-bg:                 #284b55 !important;
     --btn-border-color:       #284b55 !important;
@@ -306,7 +307,7 @@ a, a:not([href]):not([class]) {
 
 .o_main_navbar .o_menu_sections .dropdown-menu,
 .o_main_navbar .dropdown-menu {
-    background: #495057 !important;
+    background: linear-gradient(135deg, var(--martel-primary-dark) 0%, var(--martel-primary) 100%) !important;
     border: 1px solid rgba(255, 255, 255, 0.10) !important;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
     border-radius: 10px !important;
@@ -742,9 +743,11 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     text-align: center !important;
 }
 
-// Row total column – sticky right, solid background to avoid overlap
-.o_grid_renderer table th.o_grid_total,
-.o_grid_renderer table td.o_grid_total {
+// Total column (right) – sticky, solid background
+.o_grid_renderer th.o_grid_total,
+.o_grid_renderer td.o_grid_total,
+.o_grid_renderer th.col-total,
+.o_grid_renderer td.col-total {
     font-weight: 700 !important;
     color: var(--martel-primary) !important;
     background-color: #eaf1f3 !important;
@@ -754,7 +757,7 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     z-index: 2 !important;
 }
 
-// Totals footer row – sticky bottom, solid background to avoid overlap
+// Total footer row (bottom) – sticky, solid background
 .o_grid_renderer tr.o_grid_row_total td,
 .o_grid_renderer tfoot td {
     font-weight: 700 !important;
@@ -765,9 +768,11 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     z-index: 2 !important;
 }
 
-// Corner cell (total of totals) – highest z-index so it stays on top
+// Corner cell – top priority
 .o_grid_renderer tr.o_grid_row_total td.o_grid_total,
-.o_grid_renderer tfoot td.o_grid_total {
+.o_grid_renderer tfoot td.o_grid_total,
+.o_grid_renderer tr.o_grid_row_total td.col-total,
+.o_grid_renderer tfoot td.col-total {
     background-color: #cddde1 !important;
     z-index: 3 !important;
 }
