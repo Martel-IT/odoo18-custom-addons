@@ -303,10 +303,15 @@ a, a:not([href]):not([class]) {
 
 // =============================================================================
 // 2z. NAVBAR SUB-MENU DROPDOWNS (e.g., Configuration ▾ in the top bar)
+// In Odoo 18 these are portal-rendered as .o-dropdown--menu outside .o_main_navbar
 // =============================================================================
 
+// NOTE: In Odoo 18 navbar sub-menus are portal-rendered at body level as
+// .o-dropdown--menu.dropdown-menu, so .o_main_navbar as parent doesn't work.
+// We target .o-dropdown--menu.dropdown-menu and exclude the app-switcher.
 .o_main_navbar .o_menu_sections .dropdown-menu,
-.o_main_navbar .dropdown-menu {
+.o_main_navbar .dropdown-menu,
+.o-dropdown--menu.dropdown-menu:not(:has(a.o_app)) {
     background: linear-gradient(135deg, var(--martel-primary-dark) 0%, var(--martel-primary) 100%) !important;
     border: 1px solid rgba(255, 255, 255, 0.10) !important;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
@@ -364,7 +369,7 @@ a, a:not([href]):not([class]) {
 
 .o-dropdown--menu.dropdown-menu:has(a.o_app),
 .o_popover.dropdown-menu:has(a.o_app) {
-    background: linear-gradient(160deg, #152820 0%, #1e3530 100%) !important;
+    background: linear-gradient(135deg, var(--martel-primary-dark) 0%, var(--martel-primary) 100%) !important;
     border: 1px solid rgba(255, 255, 255, 0.10) !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.30) !important;
     border-radius: 10px !important;
@@ -894,6 +899,20 @@ thead th.o_weekend {
     background-color: #f0f2f4;
 }
 
+// Total column (rightmost) – sticky right, solid background to avoid overlap
+.o_form_view .o_field_x2many_2d_matrix thead th:last-child,
+.o_form_view .o_field_x2many_2d_matrix tbody td:last-child,
+.o_form_view .o_field_x2many_2d_matrix tfoot td:last-child,
+.o_form_view .o_field_x2many_2d_matrix tfoot th:last-child {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 4 !important;
+    background-color: #eaf1f3 !important;
+    font-weight: 700 !important;
+    border-left: 2px solid var(--martel-primary-light) !important;
+    color: var(--martel-primary) !important;
+}
+
 // Total footer row (tfoot) + any row marked as totals
 .o_form_view .o_field_x2many_2d_matrix .table > tfoot > tr > td,
 .o_form_view .o_field_x2many_2d_matrix .table > tfoot > tr > th,
@@ -903,6 +922,13 @@ thead th.o_weekend {
     color: var(--martel-primary) !important;
     background-color: rgba(40, 75, 85, 0.07) !important;
     border-top: 2px solid var(--martel-primary-light) !important;
+}
+
+// Corner cell (tfoot last-child) – highest priority
+.o_form_view .o_field_x2many_2d_matrix tfoot td:last-child,
+.o_form_view .o_field_x2many_2d_matrix tfoot th:last-child {
+    background-color: #cddde1 !important;
+    z-index: 5 !important;
 }
 
 // =============================================================================
