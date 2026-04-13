@@ -6,7 +6,7 @@
 
 // ── Global scale: Odoo default is 14px, bump to 15px → ~+7% on all rem units ─
 html {
-    font-size: 15px !important;
+    font-size: 17px !important;
 }
 
 // ── CSS Custom Properties ────────────────────────────────────────────────────
@@ -988,10 +988,74 @@ td.o_diff_positive {
 // 10. MISC ACCENTS
 // =============================================================================
 
-// Loading bar / progress
-.o_loading_indicator,
+// Progress bar accent (non-loading contexts)
 .progress-bar {
     background-color: var(--martel-primary) !important;
+}
+
+// =============================================================================
+// LOADING INDICATOR – full-page centered overlay
+// =============================================================================
+
+@keyframes martel-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes martel-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.o_loading_indicator {
+    // Full-page overlay
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+
+    // Frosted glass backdrop
+    background: rgba(255, 255, 255, 0.55) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+
+    // Center the spinner
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    // Fade in smoothly
+    animation: martel-fade-in 0.2s ease forwards !important;
+
+    // Hide any original text / bar content
+    font-size: 0 !important;
+    color: transparent !important;
+    overflow: hidden !important;
+
+    // Spinner card
+    &::before {
+        content: '' !important;
+        display: block !important;
+        position: absolute !important;
+        width: 88px !important;
+        height: 88px !important;
+        border-radius: 24px !important;
+        background: #ffffff !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    // Rotating ring
+    &::after {
+        content: '' !important;
+        display: block !important;
+        position: absolute !important;
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        border: 3.5px solid rgba(40, 75, 85, 0.15) !important;
+        border-top-color: var(--martel-primary) !important;
+        animation: martel-spin 0.75s linear infinite !important;
+    }
 }
 
 // Active / selected menu item
@@ -1091,6 +1155,15 @@ td.o_diff_positive {
 .o_notebook .tab-pane,
 .o_form_sheet {
     overflow-x: auto;
+    overflow-y: auto;
+
+    // Nascondi scrollbar visivamente mantenendo lo scroll funzionante
+    scrollbar-width: none;         // Firefox
+    -ms-overflow-style: none;     // IE / Edge legacy
+
+    &::-webkit-scrollbar {
+        display: none;             // Chrome / Safari / Edge
+    }
 }
 
 // Sticky first column (project names)
@@ -1151,4 +1224,25 @@ td.o_diff_positive {
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
+}
+
+// =============================================================================
+// COMPANY SELECTOR DROPDOWN
+// =============================================================================
+
+.o_switch_company_menu_dropdown {
+    width: 280px !important;
+    min-width: 280px !important;
+
+    .company_label {
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .o_switch_company_item {
+        min-height: 38px !important;
+    }
 }
