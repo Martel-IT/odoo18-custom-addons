@@ -333,7 +333,11 @@ a, a:not([href]):not([class]) {
     border-radius: 10px !important;
     padding: 6px !important;
     min-width: 180px !important;
-    overflow: visible !important;
+    max-height: calc(100vh - 60px) !important;
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    &::-webkit-scrollbar { display: none !important; }
 
     .dropdown-item,
     a.dropdown-item {
@@ -994,68 +998,103 @@ td.o_diff_positive {
 }
 
 // =============================================================================
-// LOADING INDICATOR
-//   Default  → thin shimmer bar at top (minor RPC calls, non-blocking)
-//   Nav      → full frosted-glass overlay (page navigation only)
-//              activated by JS loading_manager.js via body.o_martel_nav_loading
+// LOADING INDICATOR – due stadi
+//
+//  Stage 1 (CSS, 400ms): floating pill bottom-right, non blocca la UI
+//  Stage 2 (JS, 2000ms): full frosted-glass overlay via body.o_martel_long_loading
 // =============================================================================
 
 @keyframes martel-spin {
     to { transform: rotate(360deg); }
 }
 
-@keyframes martel-fade-in {
+@keyframes martel-pill-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes martel-overlay-in {
     from { opacity: 0; }
     to   { opacity: 1; }
 }
 
-@keyframes martel-shimmer {
-    0%   { background-position: -200% 0; }
-    100% { background-position:  200% 0; }
-}
-
-// ── Default: thin top bar (RPC calls) ────────────────────────────────────────
+// ── Stage 1: pill ─────────────────────────────────────────────────────────────
 .o_loading_indicator {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    height: 3px !important;
+    bottom: 28px !important;
+    right: 28px !important;
+    top: auto !important;
+    left: auto !important;
+    width: auto !important;
+    height: auto !important;
+    inset: auto !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 18px !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.13),
+        0 1px 4px  rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(40, 75, 85, 0.12) !important;
+
+    pointer-events: none !important;
     z-index: 9999 !important;
 
-    background: linear-gradient(
-        90deg,
-        var(--martel-primary-light) 0%,
-        var(--martel-primary)       40%,
-        var(--martel-primary-light) 60%,
-        var(--martel-primary)       100%
-    ) !important;
-    background-size: 200% 100% !important;
-    animation: martel-shimmer 1.4s ease-in-out infinite !important;
+    // Threshold 400ms
+    opacity: 0 !important;
+    animation: martel-pill-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards !important;
 
-    // No overlay, no pseudo-elements
-    font-size: 0 !important;
-    color: transparent !important;
-    overflow: hidden !important;
-    backdrop-filter: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--martel-primary) !important;
+    letter-spacing: 0.2px !important;
 
-    &::before, &::after { content: none !important; }
+    // Spinner piccolo
+    &::before {
+        content: '' !important;
+        display: block !important;
+        flex-shrink: 0 !important;
+        width: 15px !important;
+        height: 15px !important;
+        border-radius: 50% !important;
+        border: 2px solid rgba(40, 75, 85, 0.18) !important;
+        border-top-color: var(--martel-primary) !important;
+        animation: martel-spin 0.7s linear infinite !important;
+    }
+
+    &::after { content: none !important; }
 }
 
-// ── Navigation: full frosted-glass overlay ────────────────────────────────────
-body.o_martel_nav_loading .o_loading_indicator {
+// ── Stage 2: full overlay (attivato da JS dopo 2s) ────────────────────────────
+body.o_martel_long_loading .o_loading_indicator {
     inset: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
     height: 100vh !important;
+
     background: rgba(255, 255, 255, 0.6) !important;
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    animation: martel-fade-in 0.18s ease forwards !important;
 
-    // White spinner card
+    font-size: 0 !important;
+    color: transparent !important;
+    gap: 0 !important;
+    padding: 0 !important;
+
+    animation: martel-overlay-in 0.25s ease forwards !important;
+
+    // Spinner card
     &::before {
         content: '' !important;
         display: block !important;
@@ -1065,9 +1104,10 @@ body.o_martel_nav_loading .o_loading_indicator {
         border-radius: 24px !important;
         background: #ffffff !important;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        animation: none !important;
     }
 
-    // Rotating ring
+    // Spinner grande
     &::after {
         content: '' !important;
         display: block !important;
