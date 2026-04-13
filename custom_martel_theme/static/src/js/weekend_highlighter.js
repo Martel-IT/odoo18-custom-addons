@@ -149,13 +149,92 @@ function colorFlextimeDifference(root) {
     });
 }
 
+// ── Decorate timesheet table: sticky cols + "Project"/"TOT" labels ───────────
+//
+// Guard: tables already decorated (data-martel-decorated="1") are skipped
+// entirely, so re-runs on OWL mutations cost almost nothing.
+//
+function decorateTimesheetTable(root) {
+    if (!root) return;
+    const el = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
+
+    const tables = el.querySelectorAll(
+        ".o_grid_renderer table, " +
+        ".o_timesheet_container table, " +
+        ".o_notebook .tab-pane table, " +
+        ".o_form_sheet table"
+    );
+
+    tables.forEach((table) => {
+        // ── Skip already-processed tables ────────────────────────────────────
+        if (table.dataset.martelDecorated) return;
+
+        const headerRow = table.querySelector("thead tr");
+        if (!headerRow) return;
+
+        const ths = headerRow.querySelectorAll("th");
+        if (ths.length < 2) return;
+
+        // ── Label: top-left "Project" ─────────────────────────────────────────
+        const firstTh = ths[0];
+        if (!firstTh.textContent.trim()) {
+            firstTh.textContent = "Project";
+            firstTh.classList.add("martel-label-cell");
+        }
+
+        // ── Label: top-right "TOT" ────────────────────────────────────────────
+        const lastTh = ths[ths.length - 1];
+        if (!lastTh.textContent.trim()) {
+            lastTh.textContent = "TOT";
+            lastTh.classList.add("martel-label-cell");
+        }
+
+        // ── Sticky: all first and last cells in every row ─────────────────────
+        table.querySelectorAll("tr").forEach((row) => {
+            const cells = row.querySelectorAll("th, td");
+            if (!cells.length) return;
+            cells[0].classList.add("martel-sticky-first");
+            cells[cells.length - 1].classList.add("martel-sticky-last");
+        });
+
+        // ── Label: bottom-left total cell "TOT" ───────────────────────────────
+        const rows = table.querySelectorAll("tbody tr, tfoot tr");
+        if (rows.length) {
+            const lastRow = rows[rows.length - 1];
+            const firstCell = lastRow.querySelector("th, td");
+            if (firstCell && !firstCell.textContent.trim()) {
+                firstCell.textContent = "TOT";
+                firstCell.classList.add("martel-label-cell");
+            }
+        }
+
+        // Mark as done – future observer triggers will skip this table
+        table.dataset.martelDecorated = "1";
+    });
+}
+
+// ── Debounced RAF scheduler: coalesces rapid-fire mutations into one run ──────
+//
+// The MutationObserver can fire dozens of times per second during OWL renders.
+// We cancel the pending frame before scheduling a new one, so the actual work
+// (querySelectorAll + DOM traversal) runs at most once per paint frame.
+//
+let _pendingRaf = null;
+function scheduleRun() {
+    if (_pendingRaf) cancelAnimationFrame(_pendingRaf);
+    _pendingRaf = requestAnimationFrame(() => {
+        _pendingRaf = null;
+        markWeekendColumns(document);
+        colorFlextimeDifference(document);
+        decorateTimesheetTable(document);
+    });
+}
+
 // ── MutationObserver: re-run when OWL adds/removes grid/form nodes ───────────
 function initWeekendObserver() {
     const target = document.querySelector(".o_web_client") || document.body;
 
     const observer = new MutationObserver((mutations) => {
-        let relevant = false;
-
         for (const m of mutations) {
             if (m.type !== "childList" || !m.addedNodes.length) continue;
 
@@ -174,40 +253,26 @@ function initWeekendObserver() {
                         "table, table.attendanceTable, iframe"
                     )
                 ) {
-                    relevant = true;
-                    break;
+                    scheduleRun();
+                    return; // one schedule per batch is enough
                 }
             }
-            if (relevant) break;
-        }
-
-        if (relevant) {
-            requestAnimationFrame(() => {
-                markWeekendColumns(document);
-                colorFlextimeDifference(document);
-            });
         }
     });
 
     observer.observe(target, { childList: true, subtree: true });
 
-    // Also re-run when the user switches tabs (Summary / Details / Flexitime)
+    // Re-run when the user switches tabs (Summary / Details / Flexitime)
     target.addEventListener("click", (e) => {
         const tab = e.target.closest(".nav-link, [data-bs-toggle='tab'], .o_notebook .nav-item");
         if (tab) {
             // Small delay so OWL renders the new tab content first
-            setTimeout(() => {
-                markWeekendColumns(document);
-                colorFlextimeDifference(document);
-            }, 80);
+            setTimeout(scheduleRun, 80);
         }
-    });
+    }, { passive: true });
 
     // Initial scan
-    requestAnimationFrame(() => {
-        markWeekendColumns(document);
-        colorFlextimeDifference(document);
-    });
+    scheduleRun();
 }
 
 // ── Service registration ─────────────────────────────────────────────────────
