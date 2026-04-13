@@ -31,12 +31,12 @@ html {
     --btn-bg:                       #284b55;
     --btn-border-color:             #284b55;
     --btn-hover-color:              #ffffff;
-    --btn-hover-bg:                 #495057;
-    --btn-hover-border-color:       #495057;
-    --btn-focus-shadow-rgb:         73, 80, 87;
+    --btn-hover-bg:                 #1c363e;
+    --btn-hover-border-color:       #1c363e;
+    --btn-focus-shadow-rgb:         40, 75, 85;
     --btn-active-color:             #ffffff;
-    --btn-active-bg:                #495057;
-    --btn-active-border-color:      #3a4147;
+    --btn-active-bg:                #1c363e;
+    --btn-active-border-color:      #1c363e;
     --btn-disabled-color:           #284b55;
     --btn-disabled-border-color:    #284b55;
 
@@ -60,12 +60,12 @@ html .btn-primary {
     --btn-bg:                 #284b55 !important;
     --btn-border-color:       #284b55 !important;
     --btn-hover-color:        #ffffff !important;
-    --btn-hover-bg:           #495057 !important;
-    --btn-hover-border-color: #495057 !important;
-    --btn-focus-shadow-rgb:   73, 80, 87 !important;
+    --btn-hover-bg:           #1c363e !important;
+    --btn-hover-border-color: #1c363e !important;
+    --btn-focus-shadow-rgb:   40, 75, 85 !important;
     --btn-active-color:       #ffffff !important;
-    --btn-active-bg:          #3a4147 !important;
-    --btn-active-border-color:#3a4147 !important;
+    --btn-active-bg:          #1c363e !important;
+    --btn-active-border-color:#1c363e !important;
     --btn-active-shadow:      inset 0 3px 5px rgba(0, 0, 0, 0.125) !important;
     --btn-disabled-color:     #ffffff !important;
     --btn-disabled-bg:        #284b55 !important;
@@ -76,14 +76,14 @@ html .btn-primary {
     color:            #ffffff !important;
 
     &:hover, &:focus {
-        background-color: #495057 !important;
-        border-color:     #495057 !important;
+        background-color: #1c363e !important;
+        border-color:     #1c363e !important;
         color:            #ffffff !important;
     }
 
     &:active, &.active {
-        background-color: #3a4147 !important;
-        border-color:     #3a4147 !important;
+        background-color: #1c363e !important;
+        border-color:     #1c363e !important;
         color:            #ffffff !important;
     }
 }
@@ -994,7 +994,10 @@ td.o_diff_positive {
 }
 
 // =============================================================================
-// LOADING INDICATOR – full-page centered overlay
+// LOADING INDICATOR
+//   Default  → thin shimmer bar at top (minor RPC calls, non-blocking)
+//   Nav      → full frosted-glass overlay (page navigation only)
+//              activated by JS loading_manager.js via body.o_martel_nav_loading
 // =============================================================================
 
 @keyframes martel-spin {
@@ -1006,33 +1009,53 @@ td.o_diff_positive {
     to   { opacity: 1; }
 }
 
+@keyframes martel-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+
+// ── Default: thin top bar (RPC calls) ────────────────────────────────────────
 .o_loading_indicator {
-    // Full-page overlay
     position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 3px !important;
     z-index: 9999 !important;
 
-    // Frosted glass backdrop
-    background: rgba(255, 255, 255, 0.55) !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+    background: linear-gradient(
+        90deg,
+        var(--martel-primary-light) 0%,
+        var(--martel-primary)       40%,
+        var(--martel-primary-light) 60%,
+        var(--martel-primary)       100%
+    ) !important;
+    background-size: 200% 100% !important;
+    animation: martel-shimmer 1.4s ease-in-out infinite !important;
 
-    // Center the spinner
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    // Fade in smoothly
-    animation: martel-fade-in 0.2s ease forwards !important;
-
-    // Hide any original text / bar content
+    // No overlay, no pseudo-elements
     font-size: 0 !important;
     color: transparent !important;
     overflow: hidden !important;
+    backdrop-filter: none !important;
 
-    // Spinner card
+    &::before, &::after { content: none !important; }
+}
+
+// ── Navigation: full frosted-glass overlay ────────────────────────────────────
+body.o_martel_nav_loading .o_loading_indicator {
+    inset: 0 !important;
+    height: 100vh !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    animation: martel-fade-in 0.18s ease forwards !important;
+
+    // White spinner card
     &::before {
         content: '' !important;
         display: block !important;
@@ -1219,11 +1242,15 @@ td.o_diff_positive {
 }
 
 // Center the tag text inside the badge
-.o_tag_badge_text {
-    display: flex !important;
-    align-items: center !important;
+.o_tag {
     justify-content: center !important;
     text-align: center !important;
+}
+
+.o_tag_badge_text {
+    text-align: center !important;
+    width: 100% !important;
+    display: block !important;
 }
 
 // =============================================================================
