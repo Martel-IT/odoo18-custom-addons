@@ -98,25 +98,94 @@ class Sheet(models.Model):
                 total_time += aal.unit_amount
             sheet.total_time = total_time
 
-    def _duty_hours(self):
-        for sheet in self:
-            if sheet.state == 'done' and sheet.total_duty_hours_done:
-                sheet.total_duty_hours = sheet.total_duty_hours_done
+    # ------------------------------------------------------------------
+    # Batch helpers: single DB query per period, then in-memory lookups
+    # ------------------------------------------------------------------
+
+    def _fetch_period_contracts(self, employee_id, date_start, date_end):
+        """
+        One DB query: all contracts for the employee that overlap the period.
+        Returns a recordset; caller filters per-day in memory.
+        """
+        return self.env['hr.contract'].search([
+            ('employee_id', '=', employee_id),
+            ('date_start', '<=', date_end),
+            '|',
+            ('date_end', '>=', date_start),
+            ('date_end', '=', None),
+        ])
+
+    def _fetch_period_leaves(self, employee_id, date_start, date_end):
+        """
+        One DB query: all validated leaves for the employee that overlap the period.
+        Returns a dict  {'YYYY-MM-DD': [(date_from, date_to, number_of_days), ...]}
+        so per-day lookup is O(1) in memory.
+        """
+        holiday_ids = self.env['hr.leave'].search([
+            '|', '&',
+            ('date_from', '>=', date_start),
+            ('date_from', '<=', date_end),
+            '&',
+            ('date_to', '<=', date_end),
+            ('date_to', '>=', date_start),
+            ('employee_id', '=', employee_id),
+            ('state', '=', 'validate'),
+        ])
+        leaves_by_date = {}
+        for leave in holiday_ids:
+            for leave_date in rrule.rrule(rrule.DAILY,
+                                          dtstart=leave.date_from,
+                                          until=leave.date_to):
+                key = leave_date.strftime('%Y-%m-%d')
+                leaves_by_date.setdefault(key, []).append(
+                    (leave.date_from, leave.date_to, leave.number_of_days))
+        return leaves_by_date
+
+    def _calc_duty_hours_batch(self, date_line, contracts, leaves_by_date, wh_cache):
+        """
+        Calculate duty hours for one date using pre-fetched data (no DB calls).
+        wh_cache: dict {(calendar_id, date_str): working_hours} shared across dates
+                  to avoid re-computing the same calendar+date pair.
+        """
+        duty_hours = 0.0
+        date_key = date_line.strftime('%Y-%m-%d')
+        start_dt = (date_line if isinstance(date_line, datetime)
+                    else datetime(date_line.year, date_line.month, date_line.day))
+        date_only = date_line.date()
+
+        # Filter in memory: contracts active on this specific date
+        active_contracts = contracts.filtered(
+            lambda c: c.date_start <= date_only and
+                      (not c.date_end or c.date_end >= date_only)
+        )
+
+        for contract in active_contracts:
+            cache_key = (contract.resource_calendar_id.id, date_key)
+            if cache_key not in wh_cache:
+                wh_cache[cache_key] = (
+                    contract.resource_calendar_id.get_working_hours_of_date(
+                        start_dt=start_dt,
+                        resource_id=self.employee_id.id))
+            dh = wh_cache[cache_key] or 0.0
+
+            leaves = leaves_by_date.get(date_key, [])
+            if not leaves:
+                duty_hours += dh
             else:
-                total_duty_hours = 0.0
-                dates = list(rrule.rrule(rrule.DAILY,
-                                         dtstart=sheet.date_start,
-                                         until=sheet.date_end))
-                period = {'date_start': sheet.date_start,
-                          'date_end': sheet.date_end}
-                for date_line in dates:
-                    total_duty_hours += sheet.calculate_duty_hours(
-                        date_start=date_line,
-                        period=period,
-                    )
-                sheet.total_duty_hours = total_duty_hours
+                if leaves[-1] and leaves[-1][-1]:
+                    if float(leaves[-1][-1]) == 0.5:
+                        duty_hours += dh / 2
+        return duty_hours
+
+    # ------------------------------------------------------------------
+    # Public API kept for backward-compat / external callers
+    # ------------------------------------------------------------------
 
     def count_leaves(self, date_start, employee_id, period):
+        """
+        Legacy per-day method (kept for external callers).
+        Internal code now uses _fetch_period_leaves instead.
+        """
         holiday_obj = self.env['hr.leave']
         start_leave_period = end_leave_period = False
         if period.get('date_start') and period.get('date_end'):
@@ -143,6 +212,64 @@ class Sheet(models.Model):
                         (leave_date_start, leave_date_end, leave.number_of_days))
                     break
         return leaves
+
+    def calculate_duty_hours(self, date_start, period):
+        """
+        Legacy per-day method (kept for external callers).
+        Internal code now uses _calc_duty_hours_batch instead.
+        """
+        contract_obj = self.env['hr.contract']
+        duty_hours = 0.0
+        contract_ids = contract_obj.search(
+            [('employee_id', '=', self.employee_id.id),
+             ('date_start', '<=', date_start), '|',
+             ('date_end', '>=', date_start),
+             ('date_end', '=', None)])
+        for contract in contract_ids:
+            if contract:
+                start_dt = date_start if isinstance(date_start, datetime) else datetime(
+                    date_start.year, date_start.month, date_start.day)
+                dh = contract.resource_calendar_id.get_working_hours_of_date(
+                    start_dt=start_dt,
+                    resource_id=self.employee_id.id)
+            else:
+                dh = 0.0
+            leaves = self.count_leaves(date_start, self.employee_id.id, period)
+            if not leaves:
+                if not dh:
+                    dh = 0.0
+                duty_hours += dh
+            else:
+                if leaves[-1] and leaves[-1][-1]:
+                    if float(leaves[-1][-1]) == 0.5:
+                        duty_hours += dh / 2
+        return duty_hours
+
+    # ------------------------------------------------------------------
+    # Computed fields
+    # ------------------------------------------------------------------
+
+    def _duty_hours(self):
+        for sheet in self:
+            if sheet.state == 'done' and sheet.total_duty_hours_done:
+                sheet.total_duty_hours = sheet.total_duty_hours_done
+            else:
+                total_duty_hours = 0.0
+                dates = list(rrule.rrule(rrule.DAILY,
+                                         dtstart=sheet.date_start,
+                                         until=sheet.date_end))
+
+                # --- Batch fetch: 2 queries total instead of 2*len(dates) ---
+                contracts = sheet._fetch_period_contracts(
+                    sheet.employee_id.id, sheet.date_start, sheet.date_end)
+                leaves_by_date = sheet._fetch_period_leaves(
+                    sheet.employee_id.id, sheet.date_start, sheet.date_end)
+                wh_cache = {}
+
+                for date_line in dates:
+                    total_duty_hours += sheet._calc_duty_hours_batch(
+                        date_line, contracts, leaves_by_date, wh_cache)
+                sheet.total_duty_hours = total_duty_hours
 
     def get_overtime(self, start_date):
         for sheet in self:
@@ -214,41 +341,17 @@ class Sheet(models.Model):
             output.append('</table>')
             sheet['analysis'] = '\n'.join(output)
 
-    def calculate_duty_hours(self, date_start, period):
-        contract_obj = self.env['hr.contract']
-        duty_hours = 0.0
-        contract_ids = contract_obj.search(
-            [('employee_id', '=', self.employee_id.id),
-             ('date_start', '<=', date_start), '|',
-             ('date_end', '>=', date_start),
-             ('date_end', '=', None)])
-        for contract in contract_ids:
-            if contract:
-                # date_start from rrule is a datetime; pass it directly
-                start_dt = date_start if isinstance(date_start, datetime) else datetime(
-                    date_start.year, date_start.month, date_start.day)
-                dh = contract.resource_calendar_id.get_working_hours_of_date(
-                    start_dt=start_dt,
-                    resource_id=self.employee_id.id)
-            else:
-                dh = 0.0
-            leaves = self.count_leaves(date_start, self.employee_id.id, period)
-            if not leaves:
-                if not dh:
-                    dh = 0.0
-                duty_hours += dh
-            else:
-                if leaves[-1] and leaves[-1][-1]:
-                    if float(leaves[-1][-1]) == 0.5:
-                        duty_hours += dh / 2
-        return duty_hours
-
     def get_previous_month_diff(self, employee_id, prev_timesheet_date_from):
+        """
+        Find the most recent closed timesheet before the current one.
+        Uses a DB-level filter (date_end < self.date_start) instead of
+        loading all timesheets and filtering in Python.
+        """
         total_diff = 0.0
-        prev_timesheet_ids = self.search(
-            [('employee_id', '=', employee_id)]
-        ).filtered(lambda sheet: sheet.date_end < self.date_start).sorted(
-            key=lambda v: v.date_start)
+        prev_timesheet_ids = self.search([
+            ('employee_id', '=', employee_id),
+            ('date_end', '<', self.date_start),
+        ], order='date_start asc')
         if prev_timesheet_ids:
             total_diff = prev_timesheet_ids[-1].calculate_diff_hours
         return total_diff
@@ -288,7 +391,6 @@ class Sheet(models.Model):
                     'previous_month_diff': previous_month_diff,
                     'hours': []
                 }
-                period = {'date_start': start_date, 'date_end': end_date}
                 dates = list(rrule.rrule(rrule.DAILY,
                                          dtstart=start_date,
                                          until=end_date))
@@ -307,12 +409,25 @@ class Sheet(models.Model):
                         'diff': current_month_diff,
                         'work_current_month_diff': 0.0,
                     }
+
+                # --- Batch fetch: 2 queries instead of 2*len(dates) ---
+                contracts = sheet._fetch_period_contracts(
+                    employee_id, start_date, end_date)
+                leaves_by_date = sheet._fetch_period_leaves(
+                    employee_id, start_date, end_date)
+                wh_cache = {}
+
+                # Pre-aggregate worked hours by date: O(n) once, O(1) lookup
+                worked_by_date = {}
+                for att in sheet.timesheet_ids:
+                    key = str(att.date)  # 'YYYY-MM-DD'
+                    worked_by_date[key] = worked_by_date.get(key, 0.0) + att.unit_amount
+
                 for date_line in dates:
-                    dh = sheet.calculate_duty_hours(date_start=date_line, period=period)
-                    worked_hours = 0.0
-                    for att in sheet.timesheet_ids:
-                        if att.date == date_line.date():
-                            worked_hours += att.unit_amount
+                    date_key = date_line.strftime('%Y-%m-%d')
+                    dh = sheet._calc_duty_hours_batch(
+                        date_line, contracts, leaves_by_date, wh_cache)
+                    worked_hours = worked_by_date.get(date_key, 0.0)
 
                     diff = worked_hours - dh
                     current_month_diff += diff

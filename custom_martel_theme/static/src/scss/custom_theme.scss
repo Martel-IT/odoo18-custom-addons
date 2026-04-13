@@ -1000,7 +1000,7 @@ td.o_diff_positive {
 // =============================================================================
 // LOADING INDICATOR – due stadi
 //
-//  Stage 1 (CSS, 400ms): floating pill bottom-right, non blocca la UI
+//  Stage 1 (JS, 400ms):  floating pill bottom-right via body.o_martel_loading
 //  Stage 2 (JS, 2000ms): full frosted-glass overlay via body.o_martel_long_loading
 // =============================================================================
 
@@ -1018,8 +1018,8 @@ td.o_diff_positive {
     to   { opacity: 1; }
 }
 
-// ── Stage 1: pill ─────────────────────────────────────────────────────────────
-.o_loading_indicator {
+// ── Stage 1: pill (attivato da JS dopo 400ms) ─────────────────────────────────
+body.o_martel_loading .o_loading_indicator {
     position: fixed !important;
     bottom: 28px !important;
     right: 28px !important;
@@ -1043,9 +1043,8 @@ td.o_diff_positive {
     pointer-events: none !important;
     z-index: 9999 !important;
 
-    // Threshold 400ms
     opacity: 0 !important;
-    animation: martel-pill-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards !important;
+    animation: martel-pill-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
 
     font-size: 13px !important;
     font-weight: 600 !important;
