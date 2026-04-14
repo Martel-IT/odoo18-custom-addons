@@ -1313,7 +1313,7 @@ table.o_list_table th.col-total {
 
 // =============================================================================
 // 12b. EXPENSE ATTACHMENT PREVIEW LAYOUT  (.o-mail-Attachment > iframe)
-// Large screens (≥1200px): float right alongside messages, sticky
+// Large screens (≥1200px): right-aligned, sticky, full viewport height
 // Small screens: full-width at bottom, iframe taller
 // =============================================================================
 
@@ -1323,16 +1323,16 @@ table.o_list_table th.col-total {
 }
 
 // ── Large screens: pull attachment to the right ───────────────────────────────
+// margin-left: auto works in both block and flex-column containers
 @media (min-width: 1200px) {
     .o-mail-Attachment {
-        float: right !important;
-        width: 46% !important;
-        min-width: 360px !important;
-        max-width: 520px !important;
-        margin-left: 20px !important;
-        margin-bottom: 16px !important;
+        display: block !important;
+        width: 50% !important;
+        min-width: 420px !important;
+        margin-left: auto !important;
+        align-self: flex-end !important;
         position: sticky !important;
-        top: 70px !important;
+        top: 60px !important;
         border-radius: 8px !important;
         overflow: hidden !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
@@ -1340,8 +1340,8 @@ table.o_list_table th.col-total {
         iframe {
             display: block !important;
             width: 100% !important;
-            height: calc(100vh - 130px) !important;
-            min-height: 480px !important;
+            height: calc(100vh - 80px) !important;
+            min-height: 600px !important;
             border: none !important;
         }
     }
@@ -1359,8 +1359,8 @@ table.o_list_table th.col-total {
         iframe {
             display: block !important;
             width: 100% !important;
-            height: 520px !important;
-            min-height: 400px !important;
+            height: 70vh !important;
+            min-height: 500px !important;
             border: none !important;
         }
     }
