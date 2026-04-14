@@ -22,10 +22,10 @@
             </xpath>
         <!-- Details tab: replace the pending-delete button with an immediate
              server-side unlink so onchange calls cannot restore the deleted row -->
-        <xpath expr="//page[@string='Details']//field[@name='timesheet_ids']/tree" position="attributes">
+        <xpath expr="//field[@name='timesheet_ids']/tree" position="attributes">
             <attribute name="delete">0</attribute>
         </xpath>
-        <xpath expr="//page[@string='Details']//field[@name='timesheet_ids']/tree/field[@name='unit_amount']" position="after">
+        <xpath expr="//field[@name='timesheet_ids']/tree/field[@name='unit_amount']" position="after">
             <button name="button_delete_from_sheet"
                     type="object"
                     icon="fa-trash-o"
