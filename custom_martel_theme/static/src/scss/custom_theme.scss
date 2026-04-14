@@ -731,7 +731,18 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
 }
 
 // =============================================================================
-// 5. TIMESHEET GRID – FULL WIDTH & RESPONSIVE
+// 5. FORM FIELDS – ALWAYS SHOW BORDERS
+//
+// Odoo 18 hides field borders in read mode (border-color: transparent).
+// Override to always show borders across all form views.
+// =============================================================================
+
+.o_form_view .o_field_widget .o_input {
+    --o-input-border-color: var(--bs-border-color) !important;
+}
+
+// =============================================================================
+// 6. TIMESHEET GRID – FULL WIDTH & RESPONSIVE
 // =============================================================================
 
 // Force the grid view to use full available width

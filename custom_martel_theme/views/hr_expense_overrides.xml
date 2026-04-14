@@ -15,6 +15,8 @@
             <!-- Sostituisci analytic_distribution (multi-progetto) con un semplice Many2one
                  Operiamo sull'intero gruppo perché il campo ha groups="analytic.group_analytic_accounting"
                  e Odoo 18 lo strippa prima di applicare gli xpath diretti. -->
+            <!-- Remove PDF attachment preview panel -->
+            <xpath expr="//div[contains(@class,'o_attachment_preview')]" position="replace"/>
             <xpath expr="//group[field[@name='date']][field[@name='vendor_id']]" position="replace">
                 <group>
                     <field name="date" readonly="not is_editable" class="w-50"/>
@@ -36,6 +38,24 @@
                     <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
                 </group>
             </xpath>
+        </field>
+    </record>
+
+    <!-- Expense sheet form: always show attachment button + count in the lines list -->
+    <record id="hr_expense_sheet_view_form_martel" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.form.martel</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
+        <field name="arch" type="xml">
+            <!-- Show nb_attachment count column -->
+            <field name="nb_attachment" position="attributes">
+                <attribute name="column_invisible">False</attribute>
+                <attribute name="string">Attach.</attribute>
+            </field>
+            <!-- Always show the attachment button (even when 0) so users can add attachments -->
+            <button name="action_get_attachment_view" position="attributes">
+                <attribute name="invisible">False</attribute>
+            </button>
         </field>
     </record>
 
