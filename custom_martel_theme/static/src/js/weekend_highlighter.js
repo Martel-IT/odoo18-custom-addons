@@ -169,8 +169,13 @@ function decorateTimesheetTable(root) {
         // ── Skip already-processed tables ────────────────────────────────────
         if (table.dataset.martelDecorated) return;
 
-        // ── Skip expense line tables – they have their own layout ─────────────
-        if (table.closest('.o_field_expense_lines_widget, [name="expense_line_ids"]')) return;
+        // ── Skip non-timesheet tables (expense, sales, invoice lines) ────────
+        if (table.closest(
+            '.o_field_expense_lines_widget, ' +
+            '[name="expense_line_ids"], ' +
+            '[name="order_line"], ' +
+            '[name="invoice_line_ids"]'
+        )) return;
 
         const headerRow = table.querySelector("thead tr");
         if (!headerRow) return;

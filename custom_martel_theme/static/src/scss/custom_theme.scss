@@ -26,17 +26,10 @@ html {
     --NavBar-entry-color:           rgba(255, 255, 255, 0.88);
     --link-color:                   #284b55;
 
-    // Bootstrap btn-primary CSS variables
-    --btn-color:                    #ffffff;
-    --btn-bg:                       #284b55;
-    --btn-border-color:             #284b55;
-    --btn-hover-color:              #ffffff;
-    --btn-hover-bg:                 #1c363e;
-    --btn-hover-border-color:       #1c363e;
+    // Bootstrap btn-primary CSS variables – NON mettere hover vars qui:
+    // --btn-hover-bg/color/border in :root si propagano a TUTTI i button,
+    // non solo al primario, rendendo lo sfondo scuro anche su btn-secondary ecc.
     --btn-focus-shadow-rgb:         40, 75, 85;
-    --btn-active-color:             #ffffff;
-    --btn-active-bg:                #1c363e;
-    --btn-active-border-color:      #1c363e;
     --btn-disabled-color:           #284b55;
     --btn-disabled-border-color:    #284b55;
 
@@ -51,6 +44,8 @@ html {
     --link-color:                   #284b55;
     --link-hover-color:             #1c363e;
     --focus-ring-color:             rgba(40, 75, 85, 0.25);
+    --o-input-border-color:         #000000;
+    --o-stat-button-color:          #284b55;
 }
 
 // ── Override Odoo purple (#714B67) – higher specificity beats Odoo's rule ────
@@ -157,8 +152,8 @@ html .btn {
     }
 }
 
-// ── Generic links ─────────────────────────────────────────────────────────────
-a, a:not([href]):not([class]) {
+// ── Generic links (escludi i link-button per non sovrascrivere il testo hover) ─
+a:not(.btn), a:not([href]):not([class]):not(.btn) {
     color: var(--martel-primary) !important;
 
     &:hover {
@@ -1312,51 +1307,63 @@ table.o_list_table th.col-total {
 }
 
 // =============================================================================
-// 12b. EXPENSE ATTACHMENT PREVIEW LAYOUT  (.o-mail-Attachment > iframe)
-// Large screens (≥1200px): right-aligned, sticky, full viewport height
-// Small screens: full-width at bottom, iframe taller
+// 12b. EXPENSE ATTACHMENT PREVIEW LAYOUT
+// Outer wrapper: .o_attachment_preview  (Odoo adds .o_center_attachment)
+// Inner:         .o-mail-Attachment > iframe.mb48
+// Large (≥1200px): right side, sticky, full viewport height
+// Small (<1200px): full-width, 70vh height
 // =============================================================================
 
-// Remove the default huge bottom margin on the iframe
-.o-mail-Attachment iframe.mb48 {
+// Kill default mb48 bottom margin
+.o_attachment_preview iframe,
+.o-mail-Attachment iframe {
     margin-bottom: 0 !important;
 }
 
-// ── Large screens: pull attachment to the right ───────────────────────────────
-// margin-left: auto works in both block and flex-column containers
+// ── Large screens ─────────────────────────────────────────────────────────────
 @media (min-width: 1200px) {
-    .o-mail-Attachment {
+    .o_attachment_preview {
+        // override Odoo's o_center_attachment centering
+        float: none !important;
+        text-align: left !important;
         display: block !important;
-        width: 50% !important;
-        min-width: 420px !important;
-        margin-left: auto !important;
-        align-self: flex-end !important;
+        width: 48% !important;
+        min-width: 440px !important;
+        max-width: 680px !important;
+        margin-left: auto !important;   // push to the right
+        margin-right: 0 !important;
         position: sticky !important;
         top: 60px !important;
         border-radius: 8px !important;
         overflow: hidden !important;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14) !important;
 
-        iframe {
-            display: block !important;
+        .o-mail-Attachment {
             width: 100% !important;
             height: calc(100vh - 80px) !important;
-            min-height: 600px !important;
-            border: none !important;
+
+            iframe {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 600px !important;
+                border: none !important;
+            }
         }
     }
 }
 
-// ── Small screens: full-width, bigger height ──────────────────────────────────
+// ── Small screens ─────────────────────────────────────────────────────────────
 @media (max-width: 1199px) {
-    .o-mail-Attachment {
+    .o_attachment_preview {
+        display: block !important;
         width: 100% !important;
         margin-top: 16px !important;
         border-radius: 8px !important;
         overflow: hidden !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
 
-        iframe {
+        .o-mail-Attachment iframe {
             display: block !important;
             width: 100% !important;
             height: 70vh !important;

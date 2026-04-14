@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Nascondi "Split Expense" button e campo "Included Taxes" dal form spese -->
+    <record id="hr_expense_view_form_martel" model="ir.ui.view">
+        <field name="name">hr.expense.form.martel</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Rimuovi il pulsante Split Expense -->
+            <button name="action_split_wizard" position="replace"/>
+            <!-- Rimuovi il campo Included Taxes -->
+            <field name="tax_ids" position="replace"/>
+            <!-- Sostituisci analytic_distribution (multi-progetto) con un semplice Many2one -->
+            <field name="analytic_distribution" position="replace">
+                <field name="analytic_account_id"
+                       domain="[('company_id', 'in', [company_id, False])]"
+                       options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
+
     <!-- Override Expenses Analysis pivot: default measure = Total (company currency)
          instead of Total in Currency -->
     <record id="hr_expense_view_pivot_martel" model="ir.ui.view">

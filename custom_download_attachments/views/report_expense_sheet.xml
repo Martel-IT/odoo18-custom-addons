@@ -82,7 +82,6 @@
                                         <!-- analytic_distribution is a JSON dict {account_id: percentage} -->
                                         <t t-foreach="line.analytic_distribution or {}" t-as="dist_id">
                                             <span t-esc="line.env['account.analytic.account'].browse(int(dist_id)).name"/>
-                                            (<t t-esc="line.analytic_distribution.get(dist_id)"/>%)
                                         </t>
                                     </td>
                                     <td class="col-1 text-end">
