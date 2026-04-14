@@ -13,11 +13,11 @@
             <field name="tax_ids" position="replace"/>
             <field name="tax_amount_currency" position="replace"/>
             <!-- Sostituisci analytic_distribution (multi-progetto) con un semplice Many2one -->
-            <field name="analytic_distribution" position="replace">
+            <xpath expr="//field[@name='analytic_distribution']" position="replace">
                 <field name="analytic_account_id"
                        domain="[('company_id', 'in', [company_id, False])]"
                        options="{'no_create': True}"/>
-            </field>
+            </xpath>
         </field>
     </record>
 
