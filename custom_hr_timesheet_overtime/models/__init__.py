@@ -22,3 +22,4 @@
 from . import hr_timesheet_sheet
 from . import resource_calendar
 from . import project
+from . import account_analytic_line
