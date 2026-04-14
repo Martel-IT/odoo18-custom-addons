@@ -2,7 +2,7 @@ import base64
 import io
 import logging
 
-from odoo import fields, models
+from odoo import api, fields, models
 from odoo.tools.pdf import OdooPdfFileReader, OdooPdfFileWriter
 
 _logger = logging.getLogger(__name__)
@@ -13,14 +13,30 @@ class HrExpenseSheet(models.Model):
 
     date_approve = fields.Date(
         string='Approval Date',
-        readonly=True,
+        compute='_compute_date_approve',
+        # store=False → no DB column, works immediately without module upgrade
     )
 
-    def write(self, vals):
-        """Set date_approve automatically when state changes to 'approve'."""
-        if vals.get('state') == 'approve':
-            vals.setdefault('date_approve', fields.Date.today())
-        return super().write(vals)
+    @api.depends('state', 'message_ids.tracking_value_ids')
+    def _compute_date_approve(self):
+        """
+        Read the approval date from the chatter: find the first tracking message
+        where the 'state' field was set to 'approve' (label contains 'approv').
+        Falls back to False if no such message exists.
+        """
+        for sheet in self:
+            approval_date = False
+            if sheet.state in ('approve', 'post', 'done'):
+                for msg in sheet.message_ids.sorted('date'):
+                    for tv in msg.tracking_value_ids:
+                        field_name = tv.field_id.name if tv.field_id else ''
+                        new_val = (tv.new_value_char or '').lower()
+                        if field_name == 'state' and 'approv' in new_val:
+                            approval_date = msg.date.date()
+                            break
+                    if approval_date:
+                        break
+            sheet.date_approve = approval_date
 
     def action_print_expense_report(self):
         """

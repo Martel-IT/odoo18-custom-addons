@@ -1222,19 +1222,20 @@ body.o_martel_long_loading .o_loading_indicator {
 // 11. TIMESHEET TABLE – STICKY FIRST/LAST COLUMNS + LABELS
 // =============================================================================
 
-// Make the table container scrollable so sticky works
+// ── Scroll container: ONLY .table-responsive scrolls horizontally ────────────
+// .o_form_sheet / .tab-pane must NOT create a scroll container (overflow-x: clip
+// clips without creating a BFC, so position:sticky still works inside children).
 .o_notebook .tab-pane,
 .o_form_sheet {
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow-x: clip;   // clip = no scroll context, sticky children still work
+    overflow-y: visible;
+}
 
-    // Nascondi scrollbar visivamente mantenendo lo scroll funzionante
-    scrollbar-width: none;         // Firefox
-    -ms-overflow-style: none;     // IE / Edge legacy
-
-    &::-webkit-scrollbar {
-        display: none;             // Chrome / Safari / Edge
-    }
+// The real horizontal scroll lives here – hide its scrollbar
+.table-responsive {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    &::-webkit-scrollbar { display: none !important; }
 }
 
 // Sticky first column (project names)
@@ -1270,6 +1271,23 @@ body.o_martel_long_loading .o_loading_indicator {
 .o_grid_renderer table tfoot td,
 .o_grid_renderer table tfoot th {
     text-align: center !important;
+}
+
+// ── Summary/Details timesheet table (o_list_table): center all footer cells ───
+table.o_list_table tfoot th,
+table.o_list_table tfoot td {
+    text-align: center !important;
+}
+
+// ── Remove black divider border on row-total / col-total ──────────────────────
+// Odoo's timesheet CSS adds border-left to these cells – kill it
+table.o_list_table td.row-total,
+table.o_list_table th.row-total,
+table.o_list_table td.col-total,
+table.o_list_table th.col-total {
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
 }
 
 // ── Expense table: cancel sticky classes applied before the JS guard ──────────
