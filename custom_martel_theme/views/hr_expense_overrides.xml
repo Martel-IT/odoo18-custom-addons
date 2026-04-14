@@ -26,6 +26,10 @@
                            domain="[('account_type', 'not in', ('asset_receivable','liability_payable','asset_cash','liability_credit_card')), ('deprecated', '=', False), ('company_ids', 'parent_of', company_id)]"
                            groups="account.group_account_readonly" readonly="not is_editable"
                            context="{'default_company_id': company_id}"/>
+                    <!-- Placeholder invisibile: serve come ancora per altre view (es. sale_expense) -->
+                    <field name="analytic_distribution" widget="analytic_distribution"
+                           options="{'product_field': 'product_id', 'account_field': 'account_id', 'business_domain': 'expense'}"
+                           readonly="not is_editable" invisible="1"/>
                     <field name="analytic_account_id"
                            domain="[('company_id', 'in', [company_id, False])]"
                            options="{'no_create': True}"/>
