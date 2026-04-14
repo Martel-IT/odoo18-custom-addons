@@ -8,8 +8,10 @@
         <field name="arch" type="xml">
             <!-- Rimuovi il pulsante Split Expense -->
             <button name="action_split_wizard" position="replace"/>
-            <!-- Rimuovi il campo Included Taxes -->
+            <!-- Rimuovi il campo Included Taxes (label + field + importo tax) -->
+            <label for="tax_ids" position="replace"/>
             <field name="tax_ids" position="replace"/>
+            <field name="tax_amount_currency" position="replace"/>
             <!-- Sostituisci analytic_distribution (multi-progetto) con un semplice Many2one -->
             <field name="analytic_distribution" position="replace">
                 <field name="analytic_account_id"
