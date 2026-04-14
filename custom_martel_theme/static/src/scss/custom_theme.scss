@@ -6,7 +6,7 @@
 
 // ── Global scale: Odoo default is 14px, bump to 15px → ~+7% on all rem units ─
 html {
-    font-size: 17px !important;
+    font-size: 18px !important;
 }
 
 // ── CSS Custom Properties ────────────────────────────────────────────────────
@@ -1318,70 +1318,11 @@ table.o_list_table th.col-total {
 }
 
 // =============================================================================
-// 12b. EXPENSE ATTACHMENT PREVIEW LAYOUT
-// Outer wrapper: .o_attachment_preview  (Odoo adds .o_center_attachment)
-// Inner:         .o-mail-Attachment > iframe.mb48
-// Large (≥1200px): right side, sticky, full viewport height
-// Small (<1200px): full-width, 70vh height
+// 12b. EXPENSE ATTACHMENT PREVIEW – hidden
 // =============================================================================
 
-// Kill default mb48 bottom margin
-.o_attachment_preview iframe,
-.o-mail-Attachment iframe {
-    margin-bottom: 0 !important;
-}
-
-// ── Large screens ─────────────────────────────────────────────────────────────
-@media (min-width: 1200px) {
-    .o_attachment_preview {
-        // override Odoo's o_center_attachment centering
-        float: none !important;
-        text-align: left !important;
-        display: block !important;
-        width: 48% !important;
-        min-width: 440px !important;
-        max-width: 680px !important;
-        margin-left: auto !important;   // push to the right
-        margin-right: 0 !important;
-        position: sticky !important;
-        top: 60px !important;
-        border-radius: 8px !important;
-        overflow: hidden !important;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14) !important;
-
-        .o-mail-Attachment {
-            width: 100% !important;
-            height: calc(100vh - 80px) !important;
-
-            iframe {
-                display: block !important;
-                width: 100% !important;
-                height: 100% !important;
-                min-height: 600px !important;
-                border: none !important;
-            }
-        }
-    }
-}
-
-// ── Small screens ─────────────────────────────────────────────────────────────
-@media (max-width: 1199px) {
-    .o_attachment_preview {
-        display: block !important;
-        width: 100% !important;
-        margin-top: 16px !important;
-        border-radius: 8px !important;
-        overflow: hidden !important;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
-
-        .o-mail-Attachment iframe {
-            display: block !important;
-            width: 100% !important;
-            height: 70vh !important;
-            min-height: 500px !important;
-            border: none !important;
-        }
-    }
+.o_attachment_preview {
+    display: none !important;
 }
 
 // =============================================================================

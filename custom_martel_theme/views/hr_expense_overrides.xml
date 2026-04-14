@@ -41,21 +41,25 @@
         </field>
     </record>
 
-    <!-- Expense sheet form: always show attachment button + count in the lines list -->
+    <!-- Expense sheet form: move attachment count + button right after Description -->
     <record id="hr_expense_sheet_view_form_martel" model="ir.ui.view">
         <field name="name">hr.expense.sheet.form.martel</field>
         <field name="model">hr.expense.sheet</field>
         <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
         <field name="arch" type="xml">
-            <!-- Show nb_attachment count column -->
-            <field name="nb_attachment" position="attributes">
-                <attribute name="column_invisible">False</attribute>
-                <attribute name="string">Attach.</attribute>
-            </field>
-            <!-- Always show the attachment button (even when 0) so users can add attachments -->
-            <button name="action_get_attachment_view" position="attributes">
-                <attribute name="invisible">False</attribute>
-            </button>
+            <!-- Remove nb_attachment and its button from their default positions -->
+            <xpath expr="//field[@name='expense_line_ids']//field[@name='nb_attachment']" position="replace"/>
+            <xpath expr="//field[@name='expense_line_ids']//button[@name='action_get_attachment_view']" position="replace"/>
+            <!-- Re-insert them right after Description (name), always visible -->
+            <xpath expr="//field[@name='expense_line_ids']//field[@name='name']" position="after">
+                <field name="nb_attachment" column_invisible="False" string="Attachments" optional="show"/>
+                <button name="action_get_attachment_view"
+                        icon="fa-paperclip"
+                        string="Add Attachments"
+                        type="object"
+                        invisible="False"
+                        title="Add Attachments"/>
+            </xpath>
         </field>
     </record>
 
