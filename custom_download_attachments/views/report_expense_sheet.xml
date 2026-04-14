@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         Custom Martel expense sheet report template
+         Renders: header (ID, Employee, Approval Date, …)
+                  expense lines table
+                  total row
+                  signature line
+    ========================================================= -->
+    <template id="report_expense_sheet_martel" name="Expense Sheet Report (Martel)">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+
+                        <!-- Title row with ID -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h2>
+                                    Expense Report
+                                    <span style="font-size: 1.4rem; margin-left: 10px;">
+                                        (ID: <span t-esc="o.id"/>)
+                                    </span>
+                                </h2>
+                            </div>
+                        </div>
+
+                        <!-- Header fields -->
+                        <div class="row mt32 mb32">
+                            <div class="col-2">
+                                <strong>Employee:</strong>
+                                <p t-field="o.employee_id.name"/>
+                            </div>
+                            <div class="col-3">
+                                <strong>Description:</strong>
+                                <p t-field="o.name"/>
+                            </div>
+                            <div class="col-2">
+                                <strong>Validated By:</strong>
+                                <p t-field="o.user_id"/>
+                            </div>
+                            <div class="col-2">
+                                <strong>Approval Date:</strong>
+                                <p>
+                                    <t t-if="o.date_approve">
+                                        <span t-field="o.date_approve"/>
+                                    </t>
+                                    <t t-else="">—</t>
+                                </p>
+                            </div>
+                            <div class="col-3">
+                                <strong>Payment By:</strong>
+                                <p t-field="o.payment_mode"/>
+                            </div>
+                        </div>
+
+                        <!-- Expense lines table -->
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th class="col-2">Date</th>
+                                    <th class="col-3">Description</th>
+                                    <th class="col-2">Project</th>
+                                    <th class="col-1 text-end">Unit Price</th>
+                                    <th class="col-1 text-center">Qty</th>
+                                    <th class="col-1 text-end">Total</th>
+                                    <th t-if="o.is_multiple_currency" class="col-2 text-end">
+                                        Total (Company Currency)
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.expense_line_ids" t-as="line">
+                                    <td class="col-2">
+                                        <span t-field="line.date"/>
+                                    </td>
+                                    <td class="col-3">
+                                        <span t-field="line.name"/>
+                                    </td>
+                                    <td class="col-2">
+                                        <!-- analytic_distribution is a JSON dict {account_id: percentage} -->
+                                        <t t-foreach="line.analytic_distribution or {}" t-as="dist_id">
+                                            <span t-esc="line.env['account.analytic.account'].browse(int(dist_id)).name"/>
+                                            (<t t-esc="line.analytic_distribution.get(dist_id)"/>%)
+                                        </t>
+                                    </td>
+                                    <td class="col-1 text-end">
+                                        <span t-field="line.unit_amount"/>
+                                    </td>
+                                    <td class="col-1 text-center">
+                                        <span t-field="line.quantity"/>
+                                    </td>
+                                    <!-- total in expense currency -->
+                                    <td class="col-1 text-end">
+                                        <span t-field="line.total_amount_currency"
+                                              t-options='{"widget": "monetary", "display_currency": line.currency_id}'/>
+                                    </td>
+                                    <!-- total in company currency (multi-currency only) -->
+                                    <td t-if="o.is_multiple_currency" class="col-2 text-end">
+                                        <span t-field="line.total_amount"
+                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Grand total -->
+                        <div class="row justify-content-end">
+                            <div class="col-4">
+                                <table class="table table-sm">
+                                    <tr class="border-black">
+                                        <td><strong>Total</strong></td>
+                                        <td class="text-end">
+                                            <span t-field="o.total_amount"
+                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <p>Certified honest and conform,<br/>(Date and signature).<br/><br/></p>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report action wired to the template above -->
+    <record id="action_report_expense_sheet_martel" model="ir.actions.report">
+        <field name="name">Expense Sheet (Martel)</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">custom_download_attachments.report_expense_sheet_martel</field>
+        <field name="report_file">custom_download_attachments.report_expense_sheet_martel</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+
+</odoo>

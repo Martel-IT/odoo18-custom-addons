@@ -8,6 +8,7 @@
     'data': [
         'security/ir.model.access.csv',
         'wizard/download_attachments.xml',
+        'views/report_expense_sheet.xml',
         'views/hr_expense_sheet_view.xml',
     ],
     'installable': True,

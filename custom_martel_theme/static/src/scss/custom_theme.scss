@@ -121,6 +121,12 @@ html .btn-primary {
     }
 }
 
+// ── Global catch-all: squash any residual Odoo purple (#71639e) on ALL buttons ─
+html .btn {
+    --btn-active-border-color: var(--martel-primary-dark, #1c363e) !important;
+    --btn-focus-shadow-rgb:    40, 75, 85 !important;
+}
+
 // ── btn-link: override Odoo purple focus shadow ───────────────────────────────
 .btn-link {
     --btn-focus-shadow-rgb: 40, 75, 85 !important;
@@ -390,6 +396,9 @@ a, a:not([href]):not([class]) {
     border-radius: 10px !important;
     padding: 8px !important;
     min-width: 200px !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    &::-webkit-scrollbar { display: none !important; }
 
     // ── Each app link ─────────────────────────────────────────────────────────
     a.o_app,
@@ -1255,6 +1264,88 @@ body.o_martel_long_loading .o_loading_indicator {
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     color: var(--martel-primary) !important;
+}
+
+// ── Timesheet grid: center "tot ore del giorno" (footer day cells) ────────────
+.o_grid_renderer table tfoot td,
+.o_grid_renderer table tfoot th {
+    text-align: center !important;
+}
+
+// ── Expense table: cancel sticky classes applied before the JS guard ──────────
+// (tables already decorated before the guard was added keep their classes)
+.o_field_expense_lines_widget .martel-sticky-first,
+[name="expense_line_ids"] .martel-sticky-first {
+    position: static !important;
+    left: auto !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+    background-color: inherit !important;
+}
+.o_field_expense_lines_widget .martel-sticky-last,
+[name="expense_line_ids"] .martel-sticky-last {
+    position: static !important;
+    right: auto !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+    background-color: inherit !important;
+    font-weight: inherit !important;
+    text-align: inherit !important;
+}
+
+// =============================================================================
+// 12b. EXPENSE ATTACHMENT PREVIEW LAYOUT  (.o-mail-Attachment > iframe)
+// Large screens (≥1200px): float right alongside messages, sticky
+// Small screens: full-width at bottom, iframe taller
+// =============================================================================
+
+// Remove the default huge bottom margin on the iframe
+.o-mail-Attachment iframe.mb48 {
+    margin-bottom: 0 !important;
+}
+
+// ── Large screens: pull attachment to the right ───────────────────────────────
+@media (min-width: 1200px) {
+    .o-mail-Attachment {
+        float: right !important;
+        width: 46% !important;
+        min-width: 360px !important;
+        max-width: 520px !important;
+        margin-left: 20px !important;
+        margin-bottom: 16px !important;
+        position: sticky !important;
+        top: 70px !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+
+        iframe {
+            display: block !important;
+            width: 100% !important;
+            height: calc(100vh - 130px) !important;
+            min-height: 480px !important;
+            border: none !important;
+        }
+    }
+}
+
+// ── Small screens: full-width, bigger height ──────────────────────────────────
+@media (max-width: 1199px) {
+    .o-mail-Attachment {
+        width: 100% !important;
+        margin-top: 16px !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+
+        iframe {
+            display: block !important;
+            width: 100% !important;
+            height: 520px !important;
+            min-height: 400px !important;
+            border: none !important;
+        }
+    }
 }
 
 // =============================================================================
