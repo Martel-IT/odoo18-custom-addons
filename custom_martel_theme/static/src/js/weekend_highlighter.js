@@ -169,12 +169,15 @@ function decorateTimesheetTable(root) {
         // ── Skip already-processed tables ────────────────────────────────────
         if (table.dataset.martelDecorated) return;
 
-        // ── Skip non-timesheet tables (expense, sales, invoice lines) ────────
+        // ── Skip non-timesheet tables (expense, sales, invoice lines, details) ──
+        // timesheet_ids is the Details tab list - OWL owns that DOM and direct
+        // class manipulation triggers a re-render that restores pending-deleted rows.
         if (table.closest(
             '.o_field_expense_lines_widget, ' +
             '[name="expense_line_ids"], ' +
             '[name="order_line"], ' +
-            '[name="invoice_line_ids"]'
+            '[name="invoice_line_ids"], ' +
+            '[name="timesheet_ids"]'
         )) return;
 
         const headerRow = table.querySelector("thead tr");
