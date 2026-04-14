@@ -459,6 +459,15 @@ class Sheet(models.Model):
                     res['total'] = total
                 return res
 
+    @api.onchange("date_start", "date_end", "employee_id")
+    def _onchange_scope(self):
+        # Only re-fetch timesheet_ids from DB for new (unsaved) records.
+        # For existing records the linkage is maintained via sheet_id on
+        # account.analytic.line; re-fetching here would override any pending
+        # deletions the user made in the Details tab before saving.
+        if not self._origin.id:
+            self._compute_timesheet_ids()
+
     def write(self, vals):
         if 'state' in vals and vals['state'] == 'done':
             for sheet in self:
