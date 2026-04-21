@@ -1012,129 +1012,6 @@ td.o_diff_positive {
     background-color: var(--martel-primary) !important;
 }
 
-// =============================================================================
-// LOADING INDICATOR – due stadi
-//
-//  Stage 1 (JS, 400ms):  floating pill bottom-right via body.o_martel_loading
-//  Stage 2 (JS, 2000ms): full frosted-glass overlay via body.o_martel_long_loading
-// =============================================================================
-
-@keyframes martel-spin {
-    to { transform: rotate(360deg); }
-}
-
-@keyframes martel-pill-in {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
-    to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-
-@keyframes martel-overlay-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-// ── Stage 1: pill (attivato da JS dopo 400ms) ─────────────────────────────────
-body.o_martel_loading .o_loading_indicator {
-    position: fixed !important;
-    bottom: 28px !important;
-    right: 28px !important;
-    top: auto !important;
-    left: auto !important;
-    width: auto !important;
-    height: auto !important;
-    inset: auto !important;
-
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    padding: 10px 18px !important;
-    border-radius: 999px !important;
-    background: #ffffff !important;
-    box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.13),
-        0 1px 4px  rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid rgba(40, 75, 85, 0.12) !important;
-
-    pointer-events: none !important;
-    z-index: 9999 !important;
-
-    opacity: 0 !important;
-    animation: martel-pill-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
-
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: var(--martel-primary) !important;
-    letter-spacing: 0.2px !important;
-
-    // Spinner piccolo
-    &::before {
-        content: '' !important;
-        display: block !important;
-        flex-shrink: 0 !important;
-        width: 15px !important;
-        height: 15px !important;
-        border-radius: 50% !important;
-        border: 2px solid rgba(40, 75, 85, 0.18) !important;
-        border-top-color: var(--martel-primary) !important;
-        animation: martel-spin 0.7s linear infinite !important;
-    }
-
-    &::after { content: none !important; }
-}
-
-// ── Stage 2: full overlay (attivato da JS dopo 2s) ────────────────────────────
-body.o_martel_long_loading .o_loading_indicator {
-    inset: 0 !important;
-    bottom: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-
-    background: rgba(255, 255, 255, 0.6) !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    font-size: 0 !important;
-    color: transparent !important;
-    gap: 0 !important;
-    padding: 0 !important;
-
-    animation: martel-overlay-in 0.25s ease forwards !important;
-
-    // Spinner card
-    &::before {
-        content: '' !important;
-        display: block !important;
-        position: absolute !important;
-        width: 88px !important;
-        height: 88px !important;
-        border-radius: 24px !important;
-        background: #ffffff !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-        animation: none !important;
-    }
-
-    // Spinner grande
-    &::after {
-        content: '' !important;
-        display: block !important;
-        position: absolute !important;
-        width: 40px !important;
-        height: 40px !important;
-        border-radius: 50% !important;
-        border: 3.5px solid rgba(40, 75, 85, 0.15) !important;
-        border-top-color: var(--martel-primary) !important;
-        animation: martel-spin 0.75s linear infinite !important;
-    }
-}
-
 // Active / selected menu item
 .o_menu_sections .o_nav_entry.o_current,
 .o_main_navbar .o_current_menu_section {
@@ -1273,6 +1150,14 @@ body.o_martel_long_loading .o_loading_indicator {
     color: var(--martel-primary) !important;
 }
 
+// "Project" header cell: match the "Summary" tab style (size/case/spacing),
+// but keep font-weight at 700.
+thead th.martel-label-cell {
+    font-size: inherit !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
 // ── Timesheet grid: center "tot ore del giorno" (footer day cells) ────────────
 .o_grid_renderer table tfoot td,
 .o_grid_renderer table tfoot th {
@@ -1315,6 +1200,23 @@ table.o_list_table th.col-total {
     background-color: inherit !important;
     font-weight: inherit !important;
     text-align: inherit !important;
+}
+
+// =============================================================================
+// 12a. MODAL DIALOGS – align to top on shorter viewports so inner popovers
+// (date pickers, dropdowns) don't get clipped below the screen.
+// Bootstrap centers the modal vertically by default; on short screens this
+// pushes Apply/Save buttons of inner calendars off-viewport.
+// =============================================================================
+
+@media (max-height: 900px) {
+    .modal .modal-dialog-centered,
+    .o_dialog .modal-dialog-centered,
+    .o_dialog .modal-dialog {
+        align-items: flex-start !important;
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
 }
 
 // =============================================================================

@@ -22,7 +22,7 @@
             'custom_martel_theme/static/src/scss/custom_theme.scss',
             'custom_martel_theme/static/src/js/weekend_highlighter.js',
             'custom_martel_theme/static/src/js/sidebar_logo.js',
-            'custom_martel_theme/static/src/js/loading_manager.js',
+            'custom_martel_theme/static/src/js/session_expired_redirect.js',
         ],
     },
     'installable': True,
