@@ -1121,8 +1121,11 @@ td.o_diff_positive {
     &::-webkit-scrollbar { display: none !important; }
 }
 
-// Sticky first column (project names)
-.martel-sticky-first {
+// Sticky first column (project names) — scoped to timesheet 2D matrix only.
+// Scoping here is a defense-in-depth: the JS guard already only adds these
+// classes inside .o_field_x2many_2d_matrix, but cached pages may still carry
+// the classes on unrelated one2many tables.
+.o_field_x2many_2d_matrix .martel-sticky-first {
     position: sticky !important;
     left: 0 !important;
     z-index: 3 !important;
@@ -1131,7 +1134,7 @@ td.o_diff_positive {
 }
 
 // Sticky last column (TOT)
-.martel-sticky-last {
+.o_field_x2many_2d_matrix .martel-sticky-last {
     position: sticky !important;
     right: 0 !important;
     z-index: 3 !important;
@@ -1142,7 +1145,7 @@ td.o_diff_positive {
 }
 
 // Header and total label cells
-.martel-label-cell {
+.o_field_x2many_2d_matrix .martel-label-cell {
     font-weight: 700 !important;
     font-size: 11px !important;
     text-transform: uppercase !important;
@@ -1152,7 +1155,7 @@ td.o_diff_positive {
 
 // "Project" header cell: match the "Summary" tab style (size/case/spacing),
 // but keep font-weight at 700.
-thead th.martel-label-cell {
+.o_field_x2many_2d_matrix thead th.martel-label-cell {
     font-size: inherit !important;
     text-transform: none !important;
     letter-spacing: normal !important;
@@ -1179,27 +1182,6 @@ table.o_list_table th.col-total {
     border-left: none !important;
     border-right: none !important;
     border-top: none !important;
-}
-
-// ── Expense table: cancel sticky classes applied before the JS guard ──────────
-// (tables already decorated before the guard was added keep their classes)
-.o_field_expense_lines_widget .martel-sticky-first,
-[name="expense_line_ids"] .martel-sticky-first {
-    position: static !important;
-    left: auto !important;
-    z-index: auto !important;
-    box-shadow: none !important;
-    background-color: inherit !important;
-}
-.o_field_expense_lines_widget .martel-sticky-last,
-[name="expense_line_ids"] .martel-sticky-last {
-    position: static !important;
-    right: auto !important;
-    z-index: auto !important;
-    box-shadow: none !important;
-    background-color: inherit !important;
-    font-weight: inherit !important;
-    text-align: inherit !important;
 }
 
 // =============================================================================

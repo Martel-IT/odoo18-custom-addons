@@ -158,27 +158,13 @@ function decorateTimesheetTable(root) {
     if (!root) return;
     const el = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
 
-    const tables = el.querySelectorAll(
-        ".o_grid_renderer table, " +
-        ".o_timesheet_container table, " +
-        ".o_notebook .tab-pane table, " +
-        ".o_form_sheet table"
-    );
+    // Only the timesheet Summary 2D matrix (Project × days × TOT). Targeting
+    // .o_form_sheet/.tab-pane is too broad: every editable one2many has empty
+    // first/last <th> (drag handle / trash) and would get spurious labels.
+    const tables = el.querySelectorAll(".o_field_x2many_2d_matrix table");
 
     tables.forEach((table) => {
-        // ── Skip already-processed tables ────────────────────────────────────
         if (table.dataset.martelDecorated) return;
-
-        // ── Skip non-timesheet tables (expense, sales, invoice lines, details) ──
-        // timesheet_ids is the Details tab list - OWL owns that DOM and direct
-        // class manipulation triggers a re-render that restores pending-deleted rows.
-        if (table.closest(
-            '.o_field_expense_lines_widget, ' +
-            '[name="expense_line_ids"], ' +
-            '[name="order_line"], ' +
-            '[name="invoice_line_ids"], ' +
-            '[name="timesheet_ids"]'
-        )) return;
 
         const headerRow = table.querySelector("thead tr");
         if (!headerRow) return;
@@ -255,11 +241,13 @@ function initWeekendObserver() {
                 if (
                     node.matches(
                         ".o_grid_renderer, .o_timesheet_container, " +
+                        ".o_field_x2many_2d_matrix, " +
                         ".o_notebook, .tab-pane, .o_form_sheet, " +
                         "table, table.attendanceTable, iframe"
                     ) ||
                     node.querySelector(
                         ".o_grid_renderer, .o_timesheet_container, " +
+                        ".o_field_x2many_2d_matrix, " +
                         ".o_notebook, .o_form_sheet, " +
                         "table, table.attendanceTable, iframe"
                     )
