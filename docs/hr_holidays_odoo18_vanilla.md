@@ -135,7 +135,7 @@ Ma c'è un'asimmetria: la sua allocazione naturale viene fuori 162h, **non 180h*
   - Allocazioni proporzionali e coerenti (180h per Klaudia)
   - L'utente vede sempre "giorni" come prima
 - **Contro:**
-  - Per Klaudia "giorni residui" dipende dall'unità mentale: vede "22.5 giorni" (180/8) ma "consuma" 0.5 per il venerdì e 1 per il lunedì. Math: se prendesse tutti i venerdì dell'anno (≈45) consumerebbe 45 × 0.5 = 22.5 giorni e finirebbe il monte. Coerente.
+ro  - Per Klaudia "giorni residui" dipende dall'unità mentale: vede "22.5 giorni" (180/8) ma "consuma" 0.5 per il venerdì e 1 per il lunedì. Math: se prendesse tutti i venerdì dell'anno (≈45) consumerebbe 45 × 0.5 = 22.5 giorni e finirebbe il monte. Coerente.
   - Lavoro di setup HR non banale: ogni part-time deve avere un calendario fedele giorno-per-giorno
   - Se i calendari non sono splittati morning/afternoon, il pulsante "mezza giornata" non funziona
 - **Verdetto:** **soluzione consigliata**, è quella che il modulo è già pronto a supportare
@@ -265,6 +265,30 @@ In **TUTTI** i 21 calendari, le fasce sono marcate come `day_period = morning`, 
 - ❌ Half-day **afternoon** → consuma 0h (slot vuoto)
 
 Questo va sistemato per *tutti* i calendari, non solo quelli sbilanciati.
+
+### Come funziona davvero half-day in Odoo (finding aprile 2026)
+
+Odoo **non** divide aritmeticamente la giornata: la half-day è **strutturale**, basata sul campo `day_period` degli `resource.calendar.attendance`. La formula effettiva è:
+
+```
+ore_consumate(half-day morning)   = somma(attendance.hours WHERE day_period == 'morning'   AND data nel range)
+ore_consumate(half-day afternoon) = somma(attendance.hours WHERE day_period == 'afternoon' AND data nel range)
+```
+
+Non c'è nessun `total_giorno / 2`. Odoo prende letteralmente tutti gli slot etichettati come quel periodo e li somma.
+
+**Implicazione pratica per orari corti senza pausa pranzo:**
+
+| Calendario Friday | Half-day morning | Half-day afternoon |
+|---|---|---|
+| Slot unico `09:00–13:00 morning` | **4h** ❌ (l'intero slot) | **0h** ❌ |
+| `09:00–11:00 morning` + `11:00–13:00 afternoon` | **2h** ✓ | **2h** ✓ |
+
+Per far funzionare half-day su un giorno da 4h serve **splittare a metà** il singolo slot in due fasce AM/PM.
+
+**Lo script `scripts/fix_calendars_split_am_pm.py` attuale NON copre questo caso:** la sua `classify()` tratta gli slot con `hour_to <= 13:00` come "tutto AM" e li *rilascia* come morning senza splittarli. Va esteso per dividere a metà anche gli slot singoli interamente in mattina o pomeriggio quando si vuole abilitare half-day su quei giorni.
+
+Alternativa scartata: overridare `_get_durations` nel modulo `custom_hr_holidays_hours8` per calcolare half-day come `total_day_hours / 2`. È una patch invasiva e disallineata dal modello dati di Odoo — meglio sistemare i calendari.
 
 ### Calendari template non assegnati (cleanup)
 
