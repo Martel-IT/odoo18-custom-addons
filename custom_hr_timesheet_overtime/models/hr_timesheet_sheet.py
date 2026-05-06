@@ -491,6 +491,13 @@ class Sheet(models.Model):
         if not self._origin.id:
             self._compute_timesheet_ids()
 
+    def _get_complete_name_components(self):
+        # OCA hr_timesheet_sheet returns [self.employee_id.display_name],
+        # which is False (not "") on empty recordsets — onchange snapshots
+        # with no employee yet then crash on ", ".join([False]).
+        components = super()._get_complete_name_components()
+        return [c for c in components if isinstance(c, str)]
+
     def write(self, vals):
         if 'state' in vals and vals['state'] == 'done':
             for sheet in self:
