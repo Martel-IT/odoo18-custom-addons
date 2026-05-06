@@ -25,6 +25,7 @@ import math
 from datetime import datetime, timedelta, time, date
 from odoo import api, fields, models, _
 from dateutil import rrule, parser
+from dateutil.relativedelta import relativedelta
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -497,6 +498,23 @@ class Sheet(models.Model):
         # with no employee yet then crash on ", ".join([False]).
         components = super()._get_complete_name_components()
         return [c for c in components if isinstance(c, str)]
+
+    @api.onchange("date_start")
+    def _onchange_date_start_set_month_end(self):
+        # When the user moves date_start, auto-extend date_end to the last day
+        # of date_start's month — but only when the existing date_end would
+        # become inconsistent (missing, before start, or in a different month).
+        # If the user manually picks a date_end within the same month after
+        # this fires, it sticks (changing date_end does not retrigger this).
+        if not self.date_start:
+            return
+        if (
+            not self.date_end
+            or self.date_end < self.date_start
+            or (self.date_end.year, self.date_end.month)
+            != (self.date_start.year, self.date_start.month)
+        ):
+            self.date_end = self.date_start + relativedelta(day=31)
 
     def write(self, vals):
         if 'state' in vals and vals['state'] == 'done':
