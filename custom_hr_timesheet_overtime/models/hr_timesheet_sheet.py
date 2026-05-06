@@ -291,7 +291,7 @@ class Sheet(models.Model):
                           'color:#146c43;font-weight:600;')
 
         for sheet in self:
-            data = self.attendance_analysis(sheet.id, function_call=True)
+            data = sheet.attendance_analysis(sheet.id, function_call=True) or {}
             keys = (_('Date'), _('Running'), _('Duty Hours'), _('Worked Hours'),
                     _('Difference'))
             diff_key = _('Difference')
@@ -378,86 +378,109 @@ class Sheet(models.Model):
         return date_format, time_format
 
     def attendance_analysis(self, timesheet_id=None, function_call=False):
+        # timesheet_id kept for backward compat but ignored: we operate on
+        # self directly. Always returns a dict so callers never see None
+        # (e.g. when invoked from onchange snapshots with incomplete data).
+        self.ensure_one()
         date_format, time_format = self._get_user_datetime_format()
-        for sheet in self:
-            if sheet.id == timesheet_id:
-                employee_id = sheet.employee_id.id
-                start_date = sheet.date_start
-                end_date = sheet.date_end
-                previous_month_diff = self.get_previous_month_diff(
-                    employee_id, start_date)
-                current_month_diff = previous_month_diff
-                res = {
-                    'previous_month_diff': previous_month_diff,
-                    'hours': []
-                }
-                dates = list(rrule.rrule(rrule.DAILY,
-                                         dtstart=start_date,
-                                         until=end_date))
-                work_current_month_diff = 0.0
-                if function_call:
-                    total = {
-                        _('Worked Hours'): 0.0,
-                        _('Duty Hours'): 0.0,
-                        _('Running'): current_month_diff,
-                        _('Difference'): 0.0,
-                    }
-                else:
-                    total = {
-                        'worked_hours': 0.0,
-                        'duty_hours': 0.0,
-                        'diff': current_month_diff,
-                        'work_current_month_diff': 0.0,
-                    }
 
-                # --- Batch fetch: 2 queries instead of 2*len(dates) ---
-                contracts = sheet._fetch_period_contracts(
-                    employee_id, start_date, end_date)
-                leaves_by_date = sheet._fetch_period_leaves(
-                    employee_id, start_date, end_date)
-                wh_cache = {}
+        if function_call:
+            empty_total = {
+                _('Worked Hours'): 0.0,
+                _('Duty Hours'): 0.0,
+                _('Running'): 0.0,
+                _('Difference'): 0.0,
+            }
+        else:
+            empty_total = {
+                'worked_hours': 0.0,
+                'duty_hours': 0.0,
+                'diff': 0.0,
+                'work_current_month_diff': 0.0,
+            }
 
-                # Pre-aggregate worked hours by date: O(n) once, O(1) lookup
-                worked_by_date = {}
-                for att in sheet.timesheet_ids:
-                    key = str(att.date)  # 'YYYY-MM-DD'
-                    worked_by_date[key] = worked_by_date.get(key, 0.0) + att.unit_amount
+        employee_id = self.employee_id.id
+        start_date = self.date_start
+        end_date = self.date_end
+        if not (employee_id and start_date and end_date):
+            return {
+                'previous_month_diff': 0.0,
+                'hours': [],
+                'total': empty_total,
+            }
 
-                for date_line in dates:
-                    date_key = date_line.strftime('%Y-%m-%d')
-                    dh = sheet._calc_duty_hours_batch(
-                        date_line, contracts, leaves_by_date, wh_cache)
-                    worked_hours = worked_by_date.get(date_key, 0.0)
+        previous_month_diff = self.get_previous_month_diff(
+            employee_id, start_date)
+        current_month_diff = previous_month_diff
+        res = {
+            'previous_month_diff': previous_month_diff,
+            'hours': [],
+        }
+        dates = list(rrule.rrule(rrule.DAILY,
+                                 dtstart=start_date,
+                                 until=end_date))
+        work_current_month_diff = 0.0
+        if function_call:
+            total = {
+                _('Worked Hours'): 0.0,
+                _('Duty Hours'): 0.0,
+                _('Running'): current_month_diff,
+                _('Difference'): 0.0,
+            }
+        else:
+            total = {
+                'worked_hours': 0.0,
+                'duty_hours': 0.0,
+                'diff': current_month_diff,
+                'work_current_month_diff': 0.0,
+            }
 
-                    diff = worked_hours - dh
-                    current_month_diff += diff
-                    work_current_month_diff += diff
-                    if function_call:
-                        res['hours'].append({
-                            _('Date'): date_line.strftime(date_format),
-                            _('Running'): sign_float_time_convert(current_month_diff),
-                            _('Duty Hours'): sign_float_time_convert(dh),
-                            _('Worked Hours'): sign_float_time_convert(worked_hours),
-                            _('Difference'): sign_float_time_convert(diff),
-                        })
-                        total[_('Worked Hours')] += worked_hours
-                        total[_('Duty Hours')] += dh
-                        total[_('Running')] += diff
-                        total[_('Difference')] = work_current_month_diff
-                    else:
-                        res['hours'].append({
-                            'name': date_line.strftime(date_format),
-                            'running': sign_float_time_convert(current_month_diff),
-                            'dh': sign_float_time_convert(dh),
-                            'worked_hours': sign_float_time_convert(worked_hours),
-                            'diff': sign_float_time_convert(diff),
-                        })
-                        total['worked_hours'] += worked_hours
-                        total['duty_hours'] += dh
-                        total['work_current_month_diff'] = work_current_month_diff
-                        total['diff'] += diff
-                    res['total'] = total
-                return res
+        contracts = self._fetch_period_contracts(
+            employee_id, start_date, end_date)
+        leaves_by_date = self._fetch_period_leaves(
+            employee_id, start_date, end_date)
+        wh_cache = {}
+
+        worked_by_date = {}
+        for att in self.timesheet_ids:
+            key = str(att.date)
+            worked_by_date[key] = worked_by_date.get(key, 0.0) + att.unit_amount
+
+        for date_line in dates:
+            date_key = date_line.strftime('%Y-%m-%d')
+            dh = self._calc_duty_hours_batch(
+                date_line, contracts, leaves_by_date, wh_cache)
+            worked_hours = worked_by_date.get(date_key, 0.0)
+
+            diff = worked_hours - dh
+            current_month_diff += diff
+            work_current_month_diff += diff
+            if function_call:
+                res['hours'].append({
+                    _('Date'): date_line.strftime(date_format),
+                    _('Running'): sign_float_time_convert(current_month_diff),
+                    _('Duty Hours'): sign_float_time_convert(dh),
+                    _('Worked Hours'): sign_float_time_convert(worked_hours),
+                    _('Difference'): sign_float_time_convert(diff),
+                })
+                total[_('Worked Hours')] += worked_hours
+                total[_('Duty Hours')] += dh
+                total[_('Running')] += diff
+                total[_('Difference')] = work_current_month_diff
+            else:
+                res['hours'].append({
+                    'name': date_line.strftime(date_format),
+                    'running': sign_float_time_convert(current_month_diff),
+                    'dh': sign_float_time_convert(dh),
+                    'worked_hours': sign_float_time_convert(worked_hours),
+                    'diff': sign_float_time_convert(diff),
+                })
+                total['worked_hours'] += worked_hours
+                total['duty_hours'] += dh
+                total['work_current_month_diff'] = work_current_month_diff
+                total['diff'] += diff
+        res['total'] = total
+        return res
 
     @api.onchange("date_start", "date_end", "employee_id")
     def _onchange_scope(self):
