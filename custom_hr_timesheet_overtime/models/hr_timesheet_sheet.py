@@ -119,8 +119,10 @@ class Sheet(models.Model):
     def _fetch_period_leaves(self, employee_id, date_start, date_end):
         """
         One DB query: all validated leaves for the employee that overlap the period.
-        Returns a dict  {'YYYY-MM-DD': [(date_from, date_to, number_of_days), ...]}
+        Returns a dict  {'YYYY-MM-DD': [(date_from, date_to, number_of_days, number_of_hours), ...]}
         so per-day lookup is O(1) in memory.
+        number_of_hours is the authoritative measure used by _calc_duty_hours_batch
+        to subtract the actual leave coverage from the day's duty.
         """
         holiday_ids = self.env['hr.leave'].search([
             '|', '&',
@@ -139,7 +141,8 @@ class Sheet(models.Model):
                                           until=leave.date_to):
                 key = leave_date.strftime('%Y-%m-%d')
                 leaves_by_date.setdefault(key, []).append(
-                    (leave.date_from, leave.date_to, leave.number_of_days))
+                    (leave.date_from, leave.date_to,
+                     leave.number_of_days, leave.number_of_hours))
         return leaves_by_date
 
     def _calc_duty_hours_batch(self, date_line, contracts, leaves_by_date, wh_cache):
@@ -147,6 +150,11 @@ class Sheet(models.Model):
         Calculate duty hours for one date using pre-fetched data (no DB calls).
         wh_cache: dict {(calendar_id, date_str): working_hours} shared across dates
                   to avoid re-computing the same calendar+date pair.
+
+        Residual duty for the day = contract working hours - hours actually covered
+        by validated leaves. Using leave.number_of_hours (rather than guessing from
+        number_of_days == 0.5) keeps the result correct on part-time calendars
+        where a half day != half of an 8h day (e.g. 90% with Friday morning only).
         """
         duty_hours = 0.0
         date_key = date_line.strftime('%Y-%m-%d')
@@ -172,11 +180,28 @@ class Sheet(models.Model):
             leaves = leaves_by_date.get(date_key, [])
             if not leaves:
                 duty_hours += dh
-            else:
-                if leaves[-1] and leaves[-1][-1]:
-                    if float(leaves[-1][-1]) == 0.5:
-                        duty_hours += dh / 2
+                continue
+
+            duty_hours += max(0.0, dh - self._leave_hours_on_day(leaves, dh))
         return duty_hours
+
+    @staticmethod
+    def _leave_hours_on_day(leaves, day_duty_hours):
+        """
+        Sum the hours that the leaves cover on a specific day.
+        - Single-day leave (date_from.date() == date_to.date()): use
+          leave.number_of_hours, which already reflects contract attendances
+          (e.g. 4h for a half day morning on a 90% Friday).
+        - Multi-day leave covering this whole day: count the full day_duty_hours,
+          since leave.number_of_hours is the total across all spanned days.
+        """
+        covered = 0.0
+        for leave_from, leave_to, _days, leave_hours in leaves:
+            if leave_from.date() == leave_to.date():
+                covered += leave_hours or 0.0
+            else:
+                return day_duty_hours
+        return covered
 
     # ------------------------------------------------------------------
     # Public API kept for backward-compat / external callers
@@ -186,6 +211,9 @@ class Sheet(models.Model):
         """
         Legacy per-day method (kept for external callers).
         Internal code now uses _fetch_period_leaves instead.
+        Returns 4-uples (date_from, date_to, number_of_days, number_of_hours);
+        callers that previously read the trailing element as number_of_days
+        must be updated to use index [2].
         """
         holiday_obj = self.env['hr.leave']
         start_leave_period = end_leave_period = False
@@ -210,7 +238,8 @@ class Sheet(models.Model):
             for leave_date in leave_dates:
                 if leave_date.strftime('%Y-%m-%d') == date_start.strftime('%Y-%m-%d'):
                     leaves.append(
-                        (leave_date_start, leave_date_end, leave.number_of_days))
+                        (leave_date_start, leave_date_end,
+                         leave.number_of_days, leave.number_of_hours))
                     break
         return leaves
 
@@ -232,18 +261,14 @@ class Sheet(models.Model):
                     date_start.year, date_start.month, date_start.day)
                 dh = contract.resource_calendar_id.get_working_hours_of_date(
                     start_dt=start_dt,
-                    resource_id=self.employee_id.id)
+                    resource_id=self.employee_id.id) or 0.0
             else:
                 dh = 0.0
             leaves = self.count_leaves(date_start, self.employee_id.id, period)
             if not leaves:
-                if not dh:
-                    dh = 0.0
                 duty_hours += dh
             else:
-                if leaves[-1] and leaves[-1][-1]:
-                    if float(leaves[-1][-1]) == 0.5:
-                        duty_hours += dh / 2
+                duty_hours += max(0.0, dh - self._leave_hours_on_day(leaves, dh))
         return duty_hours
 
     # ------------------------------------------------------------------
