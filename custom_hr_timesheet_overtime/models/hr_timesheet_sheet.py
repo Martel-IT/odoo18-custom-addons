@@ -22,7 +22,7 @@
 
 import math
 
-from datetime import datetime, timedelta, time, date
+from datetime import datetime
 from odoo import api, fields, models, _
 from dateutil import rrule, parser
 from dateutil.relativedelta import relativedelta
@@ -303,12 +303,8 @@ class Sheet(models.Model):
 
     def _prev_timesheet_diff(self):
         for sheet in self:
-            old_timesheet_start_from = sheet.date_start - timedelta(days=1)
-            prev_timesheet_diff = self.get_previous_month_diff(
-                sheet.employee_id.id,
-                old_timesheet_start_from.strftime('%Y-%m-%d'),
-            )
-            sheet.prev_timesheet_diff = prev_timesheet_diff
+            sheet.prev_timesheet_diff = sheet.get_previous_month_diff(
+                sheet.employee_id.id)
 
     def _get_analysis(self):
         diff_neg_style = ('background-color:rgba(220,53,69,0.15);'
@@ -367,19 +363,43 @@ class Sheet(models.Model):
             output.append('</table>')
             sheet['analysis'] = '\n'.join(output)
 
-    def get_previous_month_diff(self, employee_id, prev_timesheet_date_from):
+    def get_previous_month_diff(self, employee_id):
         """
-        Find the most recent closed timesheet before the current one.
-        Uses a DB-level filter (date_end < self.date_start) instead of
-        loading all timesheets and filtering in Python.
+        Running balance up to (but not including) self.date_start.
+
+        Walks previous timesheets iteratively instead of reading
+        ``calculate_diff_hours`` on the most recent one — that field
+        depends on ``prev_timesheet_diff``, which recurses one month
+        back per call. For long-tenured employees the recursion depth
+        exceeds Python's stack limit and the form crashes on open.
+
+        Algorithm: scan backwards to find the latest ``done`` sheet
+        whose stored ``total_diff_hours`` already holds the cumulative
+        balance at its ``date_end`` (everything earlier is implicitly
+        folded into that snapshot). Then walk forward from the next
+        sheet, adding ``total_time - total_duty_hours`` for each
+        non-done sheet. Neither field triggers the prev/diff
+        recursion.
         """
-        total_diff = 0.0
         prev_timesheet_ids = self.search([
             ('employee_id', '=', employee_id),
             ('date_end', '<', self.date_start),
         ], order='date_start asc')
-        if prev_timesheet_ids:
-            total_diff = prev_timesheet_ids[-1].calculate_diff_hours
+        if not prev_timesheet_ids:
+            return 0.0
+
+        starting_balance = 0.0
+        start_index = 0
+        for idx in range(len(prev_timesheet_ids) - 1, -1, -1):
+            sheet = prev_timesheet_ids[idx]
+            if sheet.state == 'done' and sheet.total_diff_hours:
+                starting_balance = sheet.total_diff_hours
+                start_index = idx + 1
+                break
+
+        total_diff = starting_balance
+        for sheet in prev_timesheet_ids[start_index:]:
+            total_diff += sheet.total_time - sheet.total_duty_hours
         return total_diff
 
     def _calculate_diff_hours(self):
@@ -388,7 +408,7 @@ class Sheet(models.Model):
                 sheet.calculate_diff_hours = sheet.total_diff_hours
             else:
                 sheet.calculate_diff_hours = (
-                    self.get_overtime(datetime.today().strftime('%Y-%m-%d')) +
+                    sheet.get_overtime(datetime.today().strftime('%Y-%m-%d')) +
                     sheet.prev_timesheet_diff)
 
     def _get_user_datetime_format(self):
@@ -435,8 +455,7 @@ class Sheet(models.Model):
                 'total': empty_total,
             }
 
-        previous_month_diff = self.get_previous_month_diff(
-            employee_id, start_date)
+        previous_month_diff = self.get_previous_month_diff(employee_id)
         current_month_diff = previous_month_diff
         res = {
             'previous_month_diff': previous_month_diff,
