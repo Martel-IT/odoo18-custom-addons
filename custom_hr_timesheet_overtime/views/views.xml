@@ -37,24 +37,16 @@
     </field>
     </record>
 
-    <!-- Add Flexitime Balance column to the timesheet sheets list views.
+    <!-- Add Flexitime Balance column to the timesheet sheets list view.
          Uses total_diff_hours (stored snapshot taken at 'done') rather than
-         the computed calculate_diff_hours, so listing many rows stays cheap. -->
+         the computed calculate_diff_hours, so listing many rows stays cheap.
+         Patching only the base tree is enough: the "My Timesheets" variant
+         (hr_timesheet_sheet_tree_my) inherits from it and picks up the
+         column automatically. -->
     <record id="timesheet_overtime_list" model="ir.ui.view">
         <field name="name">hr_timesheet.overtime.list</field>
         <field name="model">hr_timesheet.sheet</field>
         <field name="inherit_id" ref="hr_timesheet_sheet.hr_timesheet_sheet_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='total_time']" position="after">
-                <field name="total_diff_hours" widget="float_time" string="Flexitime Balance" readonly="1"/>
-            </xpath>
-        </field>
-    </record>
-
-    <record id="timesheet_overtime_list_my" model="ir.ui.view">
-        <field name="name">hr_timesheet.overtime.list.my</field>
-        <field name="model">hr_timesheet.sheet</field>
-        <field name="inherit_id" ref="hr_timesheet_sheet.hr_timesheet_sheet_tree_my"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='total_time']" position="after">
                 <field name="total_diff_hours" widget="float_time" string="Flexitime Balance" readonly="1"/>
