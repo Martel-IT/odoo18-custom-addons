@@ -145,7 +145,37 @@ class Sheet(models.Model):
                      leave.number_of_days, leave.number_of_hours))
         return leaves_by_date
 
-    def _calc_duty_hours_batch(self, date_line, contracts, leaves_by_date, wh_cache):
+    def _fetch_period_calendar_leaves(self, employee_id, date_start, date_end):
+        """
+        One DB query: resource.calendar.leaves overlapping the period that
+        apply to this employee (either calendar-global or attached to the
+        employee's own resource). Returns {'YYYY-MM-DD': True} for O(1)
+        per-day membership checks.
+
+        Public holidays migrated from Odoo 16 land in this table as
+        per-resource records (one copy per employee per holiday) rather
+        than as calendar-global entries, so filtering by resource_id is
+        required to find them. Treated as full-day absences: any record
+        covering a day zeroes duty for that day.
+        """
+        employee = self.env['hr.employee'].browse(employee_id)
+        resource = employee.resource_id
+        leaves = self.env['resource.calendar.leaves'].search([
+            ('date_from', '<=', date_end),
+            ('date_to', '>=', date_start),
+            '|', ('resource_id', '=', False),
+                 ('resource_id', '=', resource.id),
+        ])
+        covered_days = {}
+        for leave in leaves:
+            for leave_date in rrule.rrule(rrule.DAILY,
+                                          dtstart=leave.date_from,
+                                          until=leave.date_to):
+                covered_days[leave_date.strftime('%Y-%m-%d')] = True
+        return covered_days
+
+    def _calc_duty_hours_batch(self, date_line, contracts, leaves_by_date,
+                               calendar_leaves_by_date, wh_cache):
         """
         Calculate duty hours for one date using pre-fetched data (no DB calls).
         wh_cache: dict {(calendar_id, date_str): working_hours} shared across dates
@@ -155,9 +185,18 @@ class Sheet(models.Model):
         by validated leaves. Using leave.number_of_hours (rather than guessing from
         number_of_days == 0.5) keeps the result correct on part-time calendars
         where a half day != half of an 8h day (e.g. 90% with Friday morning only).
+
+        calendar_leaves_by_date marks days covered by resource.calendar.leaves
+        (public holidays migrated as per-resource records); those days are
+        treated as full-day absences and contribute 0 duty regardless of the
+        contract's working hours.
         """
         duty_hours = 0.0
         date_key = date_line.strftime('%Y-%m-%d')
+
+        if calendar_leaves_by_date.get(date_key):
+            return 0.0
+
         start_dt = (date_line if isinstance(date_line, datetime)
                     else datetime(date_line.year, date_line.month, date_line.day))
         date_only = date_line.date()
@@ -285,16 +324,19 @@ class Sheet(models.Model):
                                          dtstart=sheet.date_start,
                                          until=sheet.date_end))
 
-                # --- Batch fetch: 2 queries total instead of 2*len(dates) ---
+                # --- Batch fetch: 3 queries total instead of 3*len(dates) ---
                 contracts = sheet._fetch_period_contracts(
                     sheet.employee_id.id, sheet.date_start, sheet.date_end)
                 leaves_by_date = sheet._fetch_period_leaves(
+                    sheet.employee_id.id, sheet.date_start, sheet.date_end)
+                calendar_leaves_by_date = sheet._fetch_period_calendar_leaves(
                     sheet.employee_id.id, sheet.date_start, sheet.date_end)
                 wh_cache = {}
 
                 for date_line in dates:
                     total_duty_hours += sheet._calc_duty_hours_batch(
-                        date_line, contracts, leaves_by_date, wh_cache)
+                        date_line, contracts, leaves_by_date,
+                        calendar_leaves_by_date, wh_cache)
                 sheet.total_duty_hours = total_duty_hours
 
     def get_overtime(self, start_date):
@@ -484,6 +526,8 @@ class Sheet(models.Model):
             employee_id, start_date, end_date)
         leaves_by_date = self._fetch_period_leaves(
             employee_id, start_date, end_date)
+        calendar_leaves_by_date = self._fetch_period_calendar_leaves(
+            employee_id, start_date, end_date)
         wh_cache = {}
 
         worked_by_date = {}
@@ -494,7 +538,8 @@ class Sheet(models.Model):
         for date_line in dates:
             date_key = date_line.strftime('%Y-%m-%d')
             dh = self._calc_duty_hours_batch(
-                date_line, contracts, leaves_by_date, wh_cache)
+                date_line, contracts, leaves_by_date,
+                calendar_leaves_by_date, wh_cache)
             worked_hours = worked_by_date.get(date_key, 0.0)
 
             diff = worked_hours - dh
