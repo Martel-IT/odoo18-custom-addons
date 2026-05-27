@@ -32,7 +32,7 @@
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
     'website': 'https://www.cybrosys.com',
-    'depends': ['hr', 'hr_timesheet'],
+    'depends': ['hr', 'hr_timesheet', 'custom_hr_timesheet_overtime'],
     'data': [
         'security/ir.model.access.csv',
         'report/timesheet_templates.xml',
