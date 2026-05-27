@@ -64,7 +64,7 @@ class CreateTimesheetWithTag(models.TransientModel):
             'type': 'ir.actions.act_window',
             'name': 'Generated Timesheets',
             'res_model': 'hr_timesheet.sheet',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'target': 'current',
         }
 
@@ -119,7 +119,7 @@ class CreateTimesheetWithTag(models.TransientModel):
         # Third: Add it to dictionary to be returned
         domain = "[('id','in',%s),('user_id', 'in', %s)]" % (ts_ids, user_ids)
         value.update(domain=domain)
-        value.update(view_mode='tree,form')
+        value.update(view_mode='list,form')
         return value
 
 # END
