@@ -41,24 +41,53 @@
         </field>
     </record>
 
-    <!-- Expense sheet form: move attachment count + button right after Description -->
+    <!-- Expense sheet form: move attachment count + button right after Description,
+         and replace analytic_distribution with the analytic_account_id Many2one
+         (declared in models/hr_expense.py) so the embedded list matches the
+         single-account behavior we already use on the expense form. The whole
+         <list> is replaced because analytic_distribution carries groups=, which
+         Odoo 18 strips before direct xpath targeting can hit it. -->
     <record id="hr_expense_sheet_view_form_martel" model="ir.ui.view">
         <field name="name">hr.expense.sheet.form.martel</field>
         <field name="model">hr.expense.sheet</field>
         <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
         <field name="arch" type="xml">
-            <!-- Remove nb_attachment and its button from their default positions -->
-            <xpath expr="//field[@name='expense_line_ids']//field[@name='nb_attachment']" position="replace"/>
-            <xpath expr="//field[@name='expense_line_ids']//button[@name='action_get_attachment_view']" position="replace"/>
-            <!-- Re-insert them right after Description (name), always visible -->
-            <xpath expr="//field[@name='expense_line_ids']//field[@name='name']" position="after">
-                <field name="nb_attachment" column_invisible="False" string="Attachments" optional="show"/>
-                <button name="action_get_attachment_view"
-                        icon="fa-paperclip"
-                        string="Add Attachments"
-                        type="object"
-                        invisible="False"
-                        title="Add Attachments"/>
+            <xpath expr="//field[@name='expense_line_ids']/list" position="replace">
+                <list editable="bottom">
+                    <field name="employee_id" column_invisible="True"/>
+                    <field name="state" column_invisible="True"/>
+                    <field name="message_main_attachment_checksum" column_invisible="True"/>
+                    <field name="message_main_attachment_id" column_invisible="True"/>
+                    <field name="company_id" column_invisible="True"/>
+                    <field name="company_currency_id" column_invisible="True"/>
+                    <field name="is_multiple_currency" column_invisible="True"/>
+                    <field name="product_has_cost" column_invisible="True"/>
+                    <field name="date" optional="show"/>
+                    <field name="product_id" required="1"/>
+                    <field name="name"/>
+                    <field name="nb_attachment" column_invisible="False" string="Attachments" optional="show"/>
+                    <button name="action_get_attachment_view"
+                            icon="fa-paperclip"
+                            string="Add Attachments"
+                            type="object"
+                            invisible="False"
+                            title="Add Attachments"/>
+                    <field name="description" optional="hide"/>
+                    <field name="vendor_id" optional="hide" column_invisible="parent.payment_mode != 'company_account'"/>
+                    <field name="analytic_account_id"
+                           optional="show"
+                           options="{'no_create': True}"
+                           groups="analytic.group_analytic_accounting"/>
+                    <field name="account_id" optional="hide" groups="account.group_account_readonly"/>
+                    <field name="price_unit" optional="hide" widget="monetary" options="{'currency_field': 'company_currency_id', 'field_digits': True}" readonly="True"/>
+                    <field name="currency_id" optional="hide" readonly="True" groups="base.group_multi_currency"/>
+                    <field name="quantity" optional="hide" readonly="True"/>
+                    <field name="tax_ids" string="Taxes" optional="show" widget="many2many_tags" context="{'default_company_id': company_id}" readonly="True"/>
+                    <field name="tax_amount_currency" optional="hide" options="{'currency_field': 'currency_id'}" context="{'default_company_id': company_id}" readonly="True" groups="base.group_multi_currency"/>
+                    <field name="tax_amount" optional="hide" readonly="True"/>
+                    <field name="total_amount_currency" options="{'currency_field': 'currency_id'}" string="Subtotal In Currency " optional="show" readonly="true" groups="base.group_multi_currency"/>
+                    <field name="total_amount" string="Subtotal" readonly="True"/>
+                </list>
             </xpath>
         </field>
     </record>
