@@ -31,13 +31,15 @@ class ReportTimesheet(models.AbstractModel):
             domain.append(('date', '>=', docs.from_date))
         if docs.to_date:
             domain.append(('date', '<=', docs.to_date))
-        # Honor the per-project "Exclude from Timesheet Report" flag defined
-        # in custom_hr_timesheet_overtime. Lines whose project has the flag
-        # set must not appear in the printed report.
+        # Require a project: account.analytic.line rows can come from many
+        # places (sale orders, expenses, manual entries) and orphan lines
+        # without project would otherwise show up under "No Project" in the
+        # PDF even though they aren't part of any timesheet sheet.
+        # Also honor the per-project "Exclude from Timesheet Report" flag
+        # defined in custom_hr_timesheet_overtime.
         domain += [
-            '|',
-                ('project_id', '=', False),
-                ('project_id.excl_from_printed_timesheets', '=', False),
+            ('project_id', '!=', False),
+            ('project_id.excl_from_printed_timesheets', '=', False),
         ]
         records = self.env['account.analytic.line'].search(
             domain, order='project_id, task_id, date')
