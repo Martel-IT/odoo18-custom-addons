@@ -7,6 +7,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">timesheets_by_employee.report_timesheet_employee</field>
         <field name="report_file">timesheets_by_employee.report_timesheet_employee</field>
+        <field name="print_report_name">'Timesheet - %s%s%s' % (object.user_id.name, ' - From ' + object.from_date.strftime('%d-%m-%Y') if object.from_date else '', ' To ' + object.to_date.strftime('%d-%m-%Y') if object.to_date else '')</field>
         <field name="binding_model_id" ref="model_timesheet_report"/>
         <field name="binding_type">report</field>
     </record>
