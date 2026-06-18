@@ -1,4 +1,6 @@
 from odoo import api, fields, models, _
+from odoo.exceptions import UserError
+
 
 class HrExpense(models.Model):
     _inherit = 'hr.expense'
@@ -10,14 +12,21 @@ class HrExpense(models.Model):
         'mail.compose.message', mimetype possibly False for formats Odoo can't
         recognise like HEIC). The core attach_document then calls
         _message_set_main_attachment_id, which does r.mimetype.endswith(...) and
-        crashes on a False mimetype. We reject unsupported formats here, before
-        that happens, so the user gets a clear message instead of a server error.
+        crashes on a False mimetype. We reject anything that is not clearly a
+        supported PDF/image here, before that happens — including attachments
+        with an empty mimetype (exactly the HEIC case), which must be blocked
+        rather than skipped.
         """
         attachments = self.env['ir.attachment'].browse(
             kwargs.get('attachment_ids') or [])
-        for att in attachments:
-            self.env['ir.attachment']._assert_allowed_expense_format(
-                att.name, att.mimetype)
+        bad = attachments.filtered(
+            lambda a: not self.env['ir.attachment']._is_allowed_expense_format(
+                a.name, a.mimetype))
+        if bad:
+            raise UserError(_(
+                "Unsupported file format for '%s'. You can only attach PDF or "
+                "standard image files (PDF, JPG, JPEG, PNG)."
+            ) % ', '.join(b.name or b.mimetype or _('unknown') for b in bad))
         return super().attach_document(**kwargs)
 
     @api.model
