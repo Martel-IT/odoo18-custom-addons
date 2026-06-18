@@ -11,6 +11,16 @@ _logger = logging.getLogger(__name__)
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
 
+    def _message_set_main_attachment_id(self, attachments, force=False, filter_xml=True):
+        """Reject unsupported attachments (e.g. HEIC) posted on the report.
+
+        Same chokepoint protection as hr.expense: avoids the core crash on a
+        False mimetype and keeps only PDF/standard images on expense reports.
+        """
+        self.env['ir.attachment']._assert_expense_attachments_allowed(attachments)
+        return super()._message_set_main_attachment_id(
+            attachments, force=force, filter_xml=filter_xml)
+
     date_approve = fields.Date(
         string='Approval Date',
         compute='_compute_date_approve',

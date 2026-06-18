@@ -1,33 +1,31 @@
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
 
 
 class HrExpense(models.Model):
     _inherit = 'hr.expense'
 
     def attach_document(self, **kwargs):
-        """Validate receipt format before Odoo sets it as the main attachment.
+        """Reject unsupported receipt uploads (Attach Receipt button).
 
-        Receipts are uploaded as 'pending' attachments (res_model
-        'mail.compose.message', mimetype possibly False for formats Odoo can't
-        recognise like HEIC). The core attach_document then calls
-        _message_set_main_attachment_id, which does r.mimetype.endswith(...) and
-        crashes on a False mimetype. We reject anything that is not clearly a
-        supported PDF/image here, before that happens — including attachments
-        with an empty mimetype (exactly the HEIC case), which must be blocked
-        rather than skipped.
+        Validates every uploaded id (the core only forwards the last one to
+        _message_set_main_attachment_id, so a non-last HEIC would slip through).
         """
         attachments = self.env['ir.attachment'].browse(
             kwargs.get('attachment_ids') or [])
-        bad = attachments.filtered(
-            lambda a: not self.env['ir.attachment']._is_allowed_expense_format(
-                a.name, a.mimetype))
-        if bad:
-            raise UserError(_(
-                "Unsupported file format for '%s'. You can only attach PDF or "
-                "standard image files (PDF, JPG, JPEG, PNG)."
-            ) % ', '.join(b.name or b.mimetype or _('unknown') for b in bad))
+        self.env['ir.attachment']._assert_expense_attachments_allowed(attachments)
         return super().attach_document(**kwargs)
+
+    def _message_set_main_attachment_id(self, attachments, force=False, filter_xml=True):
+        """Reject unsupported attachments at the exact point Odoo crashes.
+
+        This is the single chokepoint reached by every path that sets a main
+        attachment (Attach Receipt, chatter message_post, ...). The core does
+        r.mimetype.endswith(...) which raises on a False mimetype (HEIC); we
+        block such attachments here with a clear message instead.
+        """
+        self.env['ir.attachment']._assert_expense_attachments_allowed(attachments)
+        return super()._message_set_main_attachment_id(
+            attachments, force=force, filter_xml=filter_xml)
 
     @api.model
     def run_vacuum_cleaner(self):

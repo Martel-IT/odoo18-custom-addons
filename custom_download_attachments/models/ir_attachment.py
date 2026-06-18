@@ -44,6 +44,22 @@ class IrAttachment(models.Model):
             "standard image files (PDF, JPG, JPEG, PNG)."
         ) % (name or mimetype))
 
+    @api.model
+    def _assert_expense_attachments_allowed(self, attachments):
+        """Raise if any record in `attachments` is not a supported expense format.
+
+        Strict (no early-return on empty mimetype): an attachment Odoo cannot
+        identify — e.g. HEIC, stored with mimetype=False — is exactly what must
+        be rejected, since it later crashes _message_set_main_attachment_id.
+        """
+        bad = attachments.filtered(
+            lambda a: not self._is_allowed_expense_format(a.name, a.mimetype))
+        if bad:
+            raise UserError(_(
+                "Unsupported file format for '%s'. You can only attach PDF or "
+                "standard image files (PDF, JPG, JPEG, PNG)."
+            ) % ', '.join(b.name or b.mimetype or _('unknown') for b in bad))
+
     @api.model_create_multi
     def create(self, vals_list):
         # Covers attachments created directly against an expense (non-pending
