@@ -18,38 +18,39 @@ _ALLOWED_EXTENSIONS = ('.pdf', '.jpg', '.jpeg', '.png')
 class IrAttachment(models.Model):
     _inherit = 'ir.attachment'
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if vals.get('res_model') in _EXPENSE_MODELS:
-                self._check_expense_attachment_format(vals)
-        return super().create(vals_list)
+    @api.model
+    def _is_allowed_expense_format(self, name, mimetype):
+        """Return True if an expense attachment is a supported PDF/image format.
+
+        Checks both the file extension and the mimetype, because Odoo cannot
+        guess the mimetype of exotic formats (e.g. HEIC) and stores it as
+        ``False`` — which later crashes the core main-attachment logic on
+        ``r.mimetype.endswith(...)``.
+        """
+        name = (name or '').lower()
+        mimetype = (mimetype or '').lower()
+        return name.endswith(_ALLOWED_EXTENSIONS) or mimetype in _ALLOWED_MIMETYPES
 
     @api.model
-    def _check_expense_attachment_format(self, vals):
-        """Reject expense attachments that are not a common, supported format.
-
-        Validation uses both the declared mimetype and the file extension so
-        that exotic formats (e.g. HEIC) are blocked even when the browser
-        reports a generic mimetype.
-        """
-        name = vals.get('name') or ''
-        mimetype = (vals.get('mimetype') or '').lower()
-
-        # A binary file with no name/mimetype yet can't be validated here;
-        # skip it (URL attachments, inline records, etc. are not receipts).
+    def _assert_allowed_expense_format(self, name, mimetype):
+        """Raise a clear error if an expense attachment is an unsupported format."""
+        # Nothing to validate yet (URL attachments, inline records, ...).
         if not name and not mimetype:
             return
-
-        ext_ok = name.lower().endswith(_ALLOWED_EXTENSIONS)
-        mime_ok = mimetype in _ALLOWED_MIMETYPES
-
-        # Accept when either signal is a known-good format; reject only when a
-        # signal is present and clearly unsupported.
-        if ext_ok or mime_ok:
+        if self._is_allowed_expense_format(name, mimetype):
             return
-
         raise UserError(_(
             "Unsupported file format for '%s'. You can only attach PDF or "
             "standard image files (PDF, JPG, JPEG, PNG)."
         ) % (name or mimetype))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Covers attachments created directly against an expense (non-pending
+        # uploads). Pending uploads land here as 'mail.compose.message' and are
+        # validated later, when linked to the expense via attach_document.
+        for vals in vals_list:
+            if vals.get('res_model') in _EXPENSE_MODELS:
+                self._assert_allowed_expense_format(
+                    vals.get('name'), vals.get('mimetype'))
+        return super().create(vals_list)
