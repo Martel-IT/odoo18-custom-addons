@@ -741,30 +741,16 @@ $martel-sidebar-border:    rgba(255, 255, 255, 0.10);
     --o-input-border-color: var(--bs-border-color) !important;
 }
 
-// Wizard / dialog forms (e.g. Print Timesheet popup) render field inputs with
-// no visible box. Force an explicit border so users see where data goes.
-.o_dialog .o_form_view .o_field_widget input.o_input,
-.o_dialog .o_form_view .o_field_widget .o_input,
-.o_dialog .o_form_view .o_field_widget .o_input_dropdown,
-.modal .o_form_view .o_field_widget input.o_input,
-.modal .o_form_view .o_field_widget .o_input,
-.modal .o_form_view .o_field_widget .o_input_dropdown {
+// Wizard forms (e.g. Print Timesheet popup) render field inputs with no
+// visible box until focus. Wizards are always rendered as "nosheet" forms,
+// which is a reliable scope (avoids touching regular record form views).
+// Covers text inputs, Many2one autocomplete inputs and date/datetime inputs.
+.o_form_nosheet .o_field_widget .o_input,
+.o_form_nosheet .o_field_widget input.o_input,
+.o_form_nosheet .o_field_widget .o-autocomplete--input {
     border: 1px solid var(--bs-border-color, #ced4da) !important;
     border-radius: 4px !important;
     background-color: #ffffff !important;
-}
-
-// Many2one (Employee) and date fields: give the whole field cell a visible box
-.o_dialog .o_form_view .o_field_widget.o_field_many2one,
-.o_dialog .o_form_view .o_field_widget.o_field_date,
-.o_dialog .o_form_view .o_field_widget.o_field_datetime,
-.modal .o_form_view .o_field_widget.o_field_many2one,
-.modal .o_form_view .o_field_widget.o_field_date,
-.modal .o_form_view .o_field_widget.o_field_datetime {
-    .o_input {
-        border: 1px solid var(--bs-border-color, #ced4da) !important;
-        border-radius: 4px !important;
-    }
 }
 
 // =============================================================================
