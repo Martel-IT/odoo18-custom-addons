@@ -41,19 +41,18 @@ class TimesheetReport(models.TransientModel):
         help="You can select the ending dates for the PDF report")
 
     def print_timesheet(self):
-        """Redirects to the report with the values obtained from the wizard
-        'data['form']': name of employee and the date duration"""
+        """Redirect to the timesheet PDF report for this wizard record."""
         today = fields.Date.today()
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date cannot be after end date.")
             if self.from_date > today or self.to_date > today:
                 raise UserError("Start date and end date cannot be in the future.")
-        data = {
-            'employee': self.user_id.id,
-            'start_date': self.from_date,
-            'end_date': self.to_date,
-        }
+        # NB: do NOT pass `data` here. The report reads the wizard via
+        # `active_id` from the context, not via `data`. Passing a non-empty
+        # `data` makes the web client build a report URL without docids, which
+        # prevents `print_report_name` from being evaluated — the PDF would then
+        # download as "Timesheets - <timestamp>.pdf" instead of the custom name.
         return self.env.ref(
             'timesheets_by_employee.action_report_print_timesheets'). \
-            report_action(self, data=data)
+            report_action(self)

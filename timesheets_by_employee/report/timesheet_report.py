@@ -18,8 +18,14 @@ class ReportTimesheet(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
-        docs = self.env['timesheet.report'].browse(
-            self.env.context.get('active_id'))
+        # Prefer docids (standard report flow): the wizard is now printed via
+        # report_action(self) without `data`, so the record id arrives as docids.
+        # Fall back to active_id for any legacy/context-based invocation.
+        if docids:
+            docs = self.env['timesheet.report'].browse(docids)
+        else:
+            docs = self.env['timesheet.report'].browse(
+                self.env.context.get('active_id'))
 
         user = docs.user_id[0]
         employee = self.env['hr.employee'].search(
