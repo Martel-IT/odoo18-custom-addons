@@ -157,12 +157,19 @@ class Sheet(models.Model):
         than as calendar-global entries, so filtering by resource_id is
         required to find them. Treated as full-day absences: any record
         covering a day zeroes duty for that day.
+
+        Excludes records linked to an hr.leave (holiday_id set): personal
+        time off lives in resource.calendar.leaves as a mirror of the
+        hr.leave, and is already accounted for hour-by-hour by
+        _fetch_period_leaves. Counting both would zero out half-day
+        leaves instead of preserving the residual duty.
         """
         employee = self.env['hr.employee'].browse(employee_id)
         resource = employee.resource_id
         leaves = self.env['resource.calendar.leaves'].search([
             ('date_from', '<=', date_end),
             ('date_to', '>=', date_start),
+            ('holiday_id', '=', False),
             '|', ('resource_id', '=', False),
                  ('resource_id', '=', resource.id),
         ])
