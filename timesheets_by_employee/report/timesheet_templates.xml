@@ -4,7 +4,26 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
-                    <div class="page">
+                    <!-- Bootstrap 5 (Odoo 18) defaults h2/h4/h5 and table padding much
+                         larger than Bootstrap 4 (Odoo 16). Without overrides the same
+                         timesheet that fit in 2 pages on v16 spreads to 4+ pages here,
+                         and the submission footer block gets orphaned on its own page.
+                         These rules clamp font sizes / spacing back to v16 density. -->
+                    <style>
+                        .o_ts_report h2 { font-size: 20px; margin-bottom: 12px; }
+                        .o_ts_report h4 { font-size: 15px; margin-top: 12px; margin-bottom: 4px; padding: 6px 10px !important; }
+                        .o_ts_report h5 { font-size: 13px; margin-top: 8px; margin-bottom: 4px; }
+                        .o_ts_report p  { margin-bottom: 4px; }
+                        .o_ts_report .row.mb-4 { margin-bottom: 6px !important; }
+                        .o_ts_report .row.mt-4 { margin-top: 6px !important; }
+                        .o_ts_report .row.mt-5 { margin-top: 14px !important; }
+                        .o_ts_report .mt-3 { margin-top: 4px !important; }
+                        .o_ts_report .mb-4 { margin-bottom: 6px !important; }
+                        .o_ts_report table.table { font-size: 11px; margin-bottom: 6px; }
+                        .o_ts_report table.table-sm &gt; :not(caption) &gt; * &gt; * { padding: 0.15rem 0.4rem; }
+                        .o_ts_report .text-right { text-align: right; }
+                    </style>
+                    <div class="page o_ts_report">
                         <div class="container">
                             <!-- Report Title -->
                             <div class="row">
@@ -114,8 +133,10 @@
                                 </div>
                             </t>
 
-                            <!-- Submission and Approval info -->
-                            <div class="row mt-5 pt-4" style="border-top: 1px solid #dee2e6;">
+                            <!-- Submission and Approval info. Wrapped in a no-break block
+                                 so the Employee/Submitted/Reviewer/Approved lines never
+                                 split across pages (was producing an orphan last page). -->
+                            <div class="row mt-5 pt-4" style="border-top: 1px solid #dee2e6; page-break-inside: avoid;">
                                 <div class="col-6">
                                     <p><strong>Employee:</strong> <span t-esc="employee.name"/></p>
                                     <p t-if="timesheet_submitted_date">
