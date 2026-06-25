@@ -1173,6 +1173,13 @@ td.o_diff_positive {
     letter-spacing: normal !important;
 }
 
+// Bottom-left "TOT" footer label: match the larger font of the top-right TOT
+// header instead of the shrunk 11px .martel-label-cell size.
+.o_field_x2many_2d_matrix tfoot .martel-label-cell {
+    font-size: inherit !important;
+    letter-spacing: normal !important;
+}
+
 // ── Timesheet grid: center "tot ore del giorno" (footer day cells) ────────────
 .o_grid_renderer table tfoot td,
 .o_grid_renderer table tfoot th {
