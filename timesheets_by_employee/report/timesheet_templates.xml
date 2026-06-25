@@ -11,44 +11,56 @@
                          rules clamp font sizes / spacing back to v16-style density and
                          add the subtle Martel-blue accents requested for hierarchy. -->
                     <style>
-                        /* Title sits flush below external_layout's header instead of
-                           floating with 4-5 blank lines above it. */
-                        .o_ts_report { padding-top: 0 !important; }
+                        /* Pull body content up to claw back the wasted whitespace that
+                           web.external_layout reserves between its header and the page
+                           body — the title was floating 4-5 blank lines too low. */
+                        .o_ts_report { margin-top: -1.4cm !important; padding-top: 0 !important; }
+
                         .o_ts_report .ts-title {
                             font-size: 20px; font-weight: 500;
                             color: #1f3a5f; text-align: center;
-                            margin: 0 0 10px 0; padding: 4px 0;
+                            margin: 0 0 8px 0; padding: 4px 0;
                             border-bottom: 2px solid #1f3a5f;
                         }
                         .o_ts_report .ts-meta { font-size: 12px; margin-bottom: 4px; }
                         .o_ts_report .ts-meta strong { color: #1f3a5f; }
                         .o_ts_report .ts-total {
                             font-size: 13px; font-weight: 500;
-                            margin: 6px 0 12px 0;
+                            margin: 4px 0 10px 0;
                         }
 
                         /* Project header (h4): full-width navy band, white text. */
                         .o_ts_report h4.project-head {
                             font-size: 14px; font-weight: 600; color: #fff;
                             background: #1f3a5f; padding: 5px 10px;
-                            margin: 14px 0 6px 0;
-                            page-break-after: avoid;
-                        }
-                        /* Task header (h5): small caps-feel, blue underline. */
-                        .o_ts_report h5.task-head {
-                            font-size: 12.5px; font-weight: 600; color: #1f3a5f;
-                            margin: 8px 0 3px 0; padding: 0 0 2px 0;
-                            border-bottom: 1px solid #c5d2e0;
+                            margin: 12px 0 0 0;
+                            /* No bottom border/margin so it sits flush against the
+                               first table below — avoids the double-line look. */
+                            border: 0;
                             page-break-after: avoid;
                         }
                         .o_ts_report p { margin-bottom: 3px; font-size: 12px; }
 
                         /* Tables. */
-                        .o_ts_report table.table { font-size: 11px; margin-bottom: 6px; }
+                        .o_ts_report table.table {
+                            font-size: 11px; margin: 0 0 6px 0;
+                            border-color: #c5d2e0;
+                        }
                         .o_ts_report table.table-sm &gt; :not(caption) &gt; * &gt; * { padding: 0.18rem 0.45rem; }
-                        .o_ts_report table.table thead th {
+                        /* Task-name banner: first thead row of each task table. Living
+                           inside the table means wkhtmltopdf repeats it on every page
+                           the table spans, so the WP4-style 14-row table never starts
+                           orphaned on a new page without its task name. */
+                        .o_ts_report table.table thead tr.task-banner th {
                             background: #eef3f8; color: #1f3a5f;
-                            font-weight: 600; border-bottom: 1px solid #c5d2e0;
+                            font-weight: 600; font-size: 12px; text-align: left;
+                            padding: 4px 10px;
+                            border-bottom: 1px solid #c5d2e0;
+                        }
+                        .o_ts_report table.table thead tr.col-head th {
+                            background: #f7f9fc; color: #1f3a5f;
+                            font-weight: 500; font-size: 10.5px;
+                            border-bottom: 1px solid #c5d2e0;
                         }
                         .o_ts_report table.table tbody tr.task-total-row {
                             background: #f7f9fc; font-weight: 500;
@@ -74,10 +86,8 @@
                     </style>
                     <div class="page o_ts_report">
                         <div class="container">
-                            <!-- Compact report title (no wasted whitespace above). -->
                             <div class="ts-title">Timesheet Report by Employees</div>
 
-                            <!-- Employee / period / total summary block. -->
                             <div class="row ts-meta">
                                 <div class="col-6">
                                     <strong>Employee:</strong>
@@ -106,10 +116,17 @@
                                              so wkhtmltopdf can't orphan it at the bottom of a page. -->
                                         <div t-att-style="'page-break-inside: avoid;' if is_first else ''">
                                             <h4 t-if="is_first" class="project-head" t-esc="project"/>
-                                            <h5 t-if="task != 'No Task'" class="task-head" t-esc="task"/>
                                             <table class="table table-sm table-bordered">
                                                 <thead>
-                                                    <tr>
+                                                    <!-- Task name as the first thead row.
+                                                         When the table spans pages, the task
+                                                         banner repeats at the top, so a long
+                                                         task table never appears orphaned
+                                                         without its name on a new page. -->
+                                                    <tr t-if="task != 'No Task'" class="task-banner">
+                                                        <th colspan="3" t-esc="task"/>
+                                                    </tr>
+                                                    <tr class="col-head">
                                                         <th width="15%">Date</th>
                                                         <th width="70%">Description</th>
                                                         <th width="15%" class="text-right">Hours</th>
