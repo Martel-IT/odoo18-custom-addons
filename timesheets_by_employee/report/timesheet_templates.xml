@@ -5,7 +5,6 @@
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
                     <div class="page">
-
                         <div class="container">
                             <!-- Report Title -->
                             <div class="row">
@@ -36,24 +35,48 @@
 
                             <!-- Projects Loop -->
                             <t t-foreach="timesheet_data['projects']" t-as="project">
-                                <t t-set="proj" t-value="timesheet_data['projects'][project]"/>
-                                <!-- First named task key (list of 0 or 1). Used to bind the
-                                     project header to the first rendered table, so the header
-                                     is never left orphaned at the bottom of a page. -->
-                                <t t-set="first_named" t-value="[t for t in proj['tasks'] if t != 'No Task'][:1]"/>
-                                <!-- Plain block, NOT a Bootstrap .row: wkhtmltopdf ignores
-                                     page-break-inside on flex containers (.row is display:flex),
-                                     which is why a whole project never stayed together before.
-                                     A block keeps a project on one page when it fits. -->
-                                <div class="mt-4" style="page-break-inside: avoid;">
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h4 class="bg-light p-2" t-esc="project"/>
 
-                                    <!-- Tasks with a name -->
-                                    <t t-foreach="proj['tasks']" t-as="task">
-                                        <t t-if="task != 'No Task'">
-                                            <t t-set="task_data" t-value="proj['tasks'][task]"/>
-                                            <div class="mt-3" style="page-break-inside: avoid;">
-                                                <h4 t-if="task in first_named" class="bg-light p-2" t-esc="project"/>
-                                                <h5 t-esc="task"/>
+                                        <!-- Tasks with name -->
+                                        <t t-foreach="timesheet_data['projects'][project]['tasks']" t-as="task">
+                                            <t t-if="task != 'No Task'">
+                                                <div class="mt-3">
+                                                    <h5 t-esc="task"/>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th width="15%">Date</th>
+                                                                    <th width="70%">Description</th>
+                                                                    <th width="15%" class="text-right">Hours</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <t t-foreach="timesheet_data['projects'][project]['tasks'][task]['entries']" t-as="entry">
+                                                                    <tr>
+                                                                        <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
+                                                                        <td><span t-esc="entry['description']"/></td>
+                                                                        <td class="text-right"><span t-esc="entry['duration']"/></td>
+                                                                    </tr>
+                                                                </t>
+                                                                <tr class="table-light">
+                                                                    <td colspan="2" class="text-right"><strong>Task Total:</strong></td>
+                                                                    <td class="text-right">
+                                                                        <strong t-esc="timesheet_data['projects'][project]['tasks'][task]['subtotal_display']"/>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+
+                                        <!-- Entries without task -->
+                                        <t t-if="'No Task' in timesheet_data['projects'][project]['tasks']">
+                                            <div class="mt-3">
                                                 <div class="table-responsive">
                                                     <table class="table table-sm table-bordered">
                                                         <thead>
@@ -64,7 +87,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <t t-foreach="task_data['entries']" t-as="entry">
+                                                            <t t-foreach="timesheet_data['projects'][project]['tasks']['No Task']['entries']" t-as="entry">
                                                                 <tr>
                                                                     <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
                                                                     <td><span t-esc="entry['description']"/></td>
@@ -72,9 +95,9 @@
                                                                 </tr>
                                                             </t>
                                                             <tr class="table-light">
-                                                                <td colspan="2" class="text-right"><strong>Task Total:</strong></td>
+                                                                <td colspan="2" class="text-right"><strong>Total:</strong></td>
                                                                 <td class="text-right">
-                                                                    <strong t-esc="task_data['subtotal_display']"/>
+                                                                    <strong t-esc="timesheet_data['projects'][project]['tasks']['No Task']['subtotal_display']"/>
                                                                 </td>
                                                             </tr>
                                                         </tbody>
@@ -82,45 +105,11 @@
                                                 </div>
                                             </div>
                                         </t>
-                                    </t>
 
-                                    <!-- Entries without task -->
-                                    <t t-if="'No Task' in proj['tasks']">
-                                        <t t-set="notask" t-value="proj['tasks']['No Task']"/>
-                                        <div class="mt-3" style="page-break-inside: avoid;">
-                                            <h4 t-if="not first_named" class="bg-light p-2" t-esc="project"/>
-                                            <div class="table-responsive">
-                                                <table class="table table-sm table-bordered">
-                                                    <thead>
-                                                        <tr>
-                                                            <th width="15%">Date</th>
-                                                            <th width="70%">Description</th>
-                                                            <th width="15%" class="text-right">Hours</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <t t-foreach="notask['entries']" t-as="entry">
-                                                            <tr>
-                                                                <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
-                                                                <td><span t-esc="entry['description']"/></td>
-                                                                <td class="text-right"><span t-esc="entry['duration']"/></td>
-                                                            </tr>
-                                                        </t>
-                                                        <tr class="table-light">
-                                                            <td colspan="2" class="text-right"><strong>Total:</strong></td>
-                                                            <td class="text-right">
-                                                                <strong t-esc="notask['subtotal_display']"/>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                        <div class="text-right mb-4 bg-light p-2">
+                                            <strong>Project Total: </strong>
+                                            <span t-esc="timesheet_data['projects'][project]['subtotal_display']"/>
                                         </div>
-                                    </t>
-
-                                    <div class="text-right mb-4 bg-light p-2">
-                                        <strong>Project Total: </strong>
-                                        <span t-esc="proj['subtotal_display']"/>
                                     </div>
                                 </div>
                             </t>
@@ -144,6 +133,25 @@
                                         <span t-esc="timesheet_approved_date" t-options="{'widget': 'datetime'}"/>
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom footer: overrides external_layout's multi-line address
+                         footer with the compact single-line Tel/Email/Web layout used
+                         in the Odoo 16 version of the report. wkhtmltopdf renders any
+                         element with class="footer" as the page footer. -->
+                    <div class="footer">
+                        <div class="text-center" style="border-top: 1px solid #dee2e6; padding-top: 10px;">
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <span t-if="company_data.get('phone')">Tel: <t t-esc="company_data['phone']"/></span>
+                                    <span t-if="company_data.get('email')" style="margin: 0 15px;">Email: <t t-esc="company_data['email']"/></span>
+                                    <span t-if="company_data.get('website')">Web: <t t-esc="company_data['website']"/></span>
+                                </div>
+                            </div>
+                            <div class="text-center text-muted mt-2">
+                                Page <span class="page"/> of <span class="topage"/>
                             </div>
                         </div>
                     </div>
