@@ -74,6 +74,16 @@
                             margin: 0 0 14px 0; color: #1f3a5f;
                         }
 
+                        /* Smart pagination:
+                           - Prefer keeping the WHOLE project on a single page. If the
+                             current page doesn't have room, wkhtmltopdf pushes the
+                             entire project block to the next page instead of splitting.
+                           - If a project is genuinely bigger than one page (e.g. >25
+                             timesheet rows) this rule is silently dropped by wkhtml,
+                             and the per-task break behavior (task banner repeating
+                             in thead) takes over. */
+                        .o_ts_report .project-block { page-break-inside: avoid; }
+
                         /* Submission/approval footer block. */
                         .o_ts_report .signoff {
                             margin-top: 18px; padding-top: 10px;
