@@ -4,152 +4,147 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
-                    <!-- Bootstrap 5 (Odoo 18) defaults h2/h4/h5 and table padding much
-                         larger than Bootstrap 4 (Odoo 16). Without overrides the same
-                         timesheet that fit in 2 pages on v16 spreads to 4+ pages here,
-                         and the submission footer block gets orphaned on its own page.
-                         These rules clamp font sizes / spacing back to v16 density. -->
+                    <!-- Bootstrap 5 (Odoo 18) defaults blow up h2/h4/h5 and table padding
+                         relative to Bootstrap 4 (Odoo 16). Without overrides the same
+                         timesheet that fit in 2 pages on v16 spreads to 4+ pages and
+                         the submission footer block orphans onto its own page. These
+                         rules clamp font sizes / spacing back to v16-style density and
+                         add the subtle Martel-blue accents requested for hierarchy. -->
                     <style>
-                        .o_ts_report h2 { font-size: 22px; margin-bottom: 14px; font-weight: 400; }
-                        .o_ts_report h4 {
-                            font-size: 17px; margin-top: 16px; margin-bottom: 6px;
-                            padding: 6px 10px !important; font-weight: 500;
-                            /* Keep project header with its first task — no orphaning. */
+                        /* Title sits flush below external_layout's header instead of
+                           floating with 4-5 blank lines above it. */
+                        .o_ts_report { padding-top: 0 !important; }
+                        .o_ts_report .ts-title {
+                            font-size: 20px; font-weight: 500;
+                            color: #1f3a5f; text-align: center;
+                            margin: 0 0 10px 0; padding: 4px 0;
+                            border-bottom: 2px solid #1f3a5f;
+                        }
+                        .o_ts_report .ts-meta { font-size: 12px; margin-bottom: 4px; }
+                        .o_ts_report .ts-meta strong { color: #1f3a5f; }
+                        .o_ts_report .ts-total {
+                            font-size: 13px; font-weight: 500;
+                            margin: 6px 0 12px 0;
+                        }
+
+                        /* Project header (h4): full-width navy band, white text. */
+                        .o_ts_report h4.project-head {
+                            font-size: 14px; font-weight: 600; color: #fff;
+                            background: #1f3a5f; padding: 5px 10px;
+                            margin: 14px 0 6px 0;
                             page-break-after: avoid;
                         }
-                        .o_ts_report h5 {
-                            font-size: 14px; margin-top: 10px; margin-bottom: 4px;
-                            font-weight: 500;
-                            /* Keep task header with its table. */
+                        /* Task header (h5): small caps-feel, blue underline. */
+                        .o_ts_report h5.task-head {
+                            font-size: 12.5px; font-weight: 600; color: #1f3a5f;
+                            margin: 8px 0 3px 0; padding: 0 0 2px 0;
+                            border-bottom: 1px solid #c5d2e0;
                             page-break-after: avoid;
                         }
-                        .o_ts_report p  { margin-bottom: 4px; }
-                        .o_ts_report .row.mb-4 { margin-bottom: 8px !important; }
-                        .o_ts_report .row.mt-4 { margin-top: 10px !important; }
-                        .o_ts_report .row.mt-5 { margin-top: 18px !important; }
-                        .o_ts_report .mt-3 { margin-top: 6px !important; }
-                        .o_ts_report .mb-4 { margin-bottom: 8px !important; }
-                        .o_ts_report table.table { font-size: 11.5px; margin-bottom: 8px; }
-                        .o_ts_report table.table-sm &gt; :not(caption) &gt; * &gt; * { padding: 0.2rem 0.5rem; }
-                        .o_ts_report .text-right { text-align: right; }
-                        .o_ts_report .text-end  { text-align: right; }
-                        /* Project total banner: lighter, less visually heavy than h4. */
-                        .o_ts_report .project-total { font-size: 12px; padding: 4px 10px !important; margin-bottom: 12px; }
+                        .o_ts_report p { margin-bottom: 3px; font-size: 12px; }
+
+                        /* Tables. */
+                        .o_ts_report table.table { font-size: 11px; margin-bottom: 6px; }
+                        .o_ts_report table.table-sm &gt; :not(caption) &gt; * &gt; * { padding: 0.18rem 0.45rem; }
+                        .o_ts_report table.table thead th {
+                            background: #eef3f8; color: #1f3a5f;
+                            font-weight: 600; border-bottom: 1px solid #c5d2e0;
+                        }
+                        .o_ts_report table.table tbody tr.task-total-row {
+                            background: #f7f9fc; font-weight: 500;
+                        }
+
+                        /* Project total — subtle right-aligned summary, not another h4. */
+                        .o_ts_report .project-total {
+                            font-size: 12px; font-weight: 500;
+                            text-align: right; padding: 4px 10px;
+                            border-top: 1px solid #d8dee5;
+                            margin: 0 0 14px 0; color: #1f3a5f;
+                        }
+
+                        /* Submission/approval footer block. */
+                        .o_ts_report .signoff {
+                            margin-top: 18px; padding-top: 10px;
+                            border-top: 1px solid #c5d2e0;
+                            font-size: 12px;
+                            page-break-inside: avoid;
+                        }
+                        .o_ts_report .signoff strong { color: #1f3a5f; }
+                        .o_ts_report .text-right, .o_ts_report .text-end { text-align: right; }
                     </style>
                     <div class="page o_ts_report">
                         <div class="container">
-                            <!-- Report Title -->
-                            <div class="row">
-                                <div class="col-12 text-center mb-4">
-                                    <h2>Timesheet Report by Employees</h2>
-                                </div>
-                            </div>
+                            <!-- Compact report title (no wasted whitespace above). -->
+                            <div class="ts-title">Timesheet Report by Employees</div>
 
-                            <!-- Employee and Period Info -->
-                            <div class="row mb-4">
+                            <!-- Employee / period / total summary block. -->
+                            <div class="row ts-meta">
                                 <div class="col-6">
-                                    <strong>Employee Name: </strong>
+                                    <strong>Employee:</strong>
                                     <span t-esc="employee.name"/>
                                 </div>
-                                <div class="col-6">
-                                    <strong>Period: </strong>
+                                <div class="col-6 text-right">
+                                    <strong>Period:</strong>
                                     <span t-esc="period"/>
                                 </div>
                             </div>
-
-                            <!-- Total Hours -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <strong>Total Hours: </strong>
-                                    <span t-esc="timesheet_data['total_hours_display']"/>
-                                </div>
+                            <div class="ts-total">
+                                <strong>Total Hours:</strong>
+                                <span t-esc="timesheet_data['total_hours_display']"/>
                             </div>
 
-                            <!-- Projects Loop -->
+                            <!-- Projects loop. -->
                             <t t-foreach="timesheet_data['projects']" t-as="project">
-                                <div class="row mt-4">
-                                    <div class="col-12">
-                                        <h4 class="bg-light p-2" t-esc="project"/>
-
-                                        <!-- Tasks with name -->
-                                        <t t-foreach="timesheet_data['projects'][project]['tasks']" t-as="task">
-                                            <t t-if="task != 'No Task'">
-                                                <div class="mt-3">
-                                                    <h5 t-esc="task"/>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th width="15%">Date</th>
-                                                                    <th width="70%">Description</th>
-                                                                    <th width="15%" class="text-right">Hours</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <t t-foreach="timesheet_data['projects'][project]['tasks'][task]['entries']" t-as="entry">
-                                                                    <tr>
-                                                                        <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
-                                                                        <td><span t-esc="entry['description']"/></td>
-                                                                        <td class="text-right"><span t-esc="entry['duration']"/></td>
-                                                                    </tr>
-                                                                </t>
-                                                                <tr class="table-light">
-                                                                    <td colspan="2" class="text-right"><strong>Task Total:</strong></td>
-                                                                    <td class="text-right">
-                                                                        <strong t-esc="timesheet_data['projects'][project]['tasks'][task]['subtotal_display']"/>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </t>
-                                        </t>
-
-                                        <!-- Entries without task -->
-                                        <t t-if="'No Task' in timesheet_data['projects'][project]['tasks']">
-                                            <div class="mt-3">
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered">
-                                                        <thead>
-                                                            <tr>
-                                                                <th width="15%">Date</th>
-                                                                <th width="70%">Description</th>
-                                                                <th width="15%" class="text-right">Hours</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <t t-foreach="timesheet_data['projects'][project]['tasks']['No Task']['entries']" t-as="entry">
-                                                                <tr>
-                                                                    <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
-                                                                    <td><span t-esc="entry['description']"/></td>
-                                                                    <td class="text-right"><span t-esc="entry['duration']"/></td>
-                                                                </tr>
-                                                            </t>
-                                                            <tr class="table-light">
-                                                                <td colspan="2" class="text-right"><strong>Total:</strong></td>
-                                                                <td class="text-right">
-                                                                    <strong t-esc="timesheet_data['projects'][project]['tasks']['No Task']['subtotal_display']"/>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </t>
-
-                                        <div class="text-right bg-light project-total">
-                                            <strong>Project Total: </strong>
-                                            <span t-esc="timesheet_data['projects'][project]['subtotal_display']"/>
+                                <t t-set="proj" t-value="timesheet_data['projects'][project]"/>
+                                <t t-set="task_keys" t-value="list(proj['tasks'].keys())"/>
+                                <t t-set="first_task" t-value="task_keys[0] if task_keys else False"/>
+                                <div class="project-block">
+                                    <t t-foreach="proj['tasks']" t-as="task">
+                                        <t t-set="task_data" t-value="proj['tasks'][task]"/>
+                                        <t t-set="is_first" t-value="task == first_task"/>
+                                        <!-- Keep project header bound to its first task table
+                                             so wkhtmltopdf can't orphan it at the bottom of a page. -->
+                                        <div t-att-style="'page-break-inside: avoid;' if is_first else ''">
+                                            <h4 t-if="is_first" class="project-head" t-esc="project"/>
+                                            <h5 t-if="task != 'No Task'" class="task-head" t-esc="task"/>
+                                            <table class="table table-sm table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th width="15%">Date</th>
+                                                        <th width="70%">Description</th>
+                                                        <th width="15%" class="text-right">Hours</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <t t-foreach="task_data['entries']" t-as="entry">
+                                                        <tr>
+                                                            <td><span t-esc="entry['date']" t-options="{'widget': 'date'}"/></td>
+                                                            <td><span t-esc="entry['description']"/></td>
+                                                            <td class="text-right"><span t-esc="entry['duration']"/></td>
+                                                        </tr>
+                                                    </t>
+                                                    <tr class="task-total-row">
+                                                        <td colspan="2" class="text-right">
+                                                            <strong t-if="task != 'No Task'">Task Total:</strong>
+                                                            <strong t-if="task == 'No Task'">Total:</strong>
+                                                        </td>
+                                                        <td class="text-right">
+                                                            <strong t-esc="task_data['subtotal_display']"/>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
+                                    </t>
+                                    <div class="project-total">
+                                        <strong>Project Total: </strong>
+                                        <span t-esc="proj['subtotal_display']"/>
                                     </div>
                                 </div>
                             </t>
 
-                            <!-- Submission and Approval info. Wrapped in a no-break block
-                                 so the Employee/Submitted/Reviewer/Approved lines never
-                                 split across pages (was producing an orphan last page). -->
-                            <div class="row mt-5 pt-4" style="border-top: 1px solid #dee2e6; page-break-inside: avoid;">
+                            <!-- Submission / approval footer block. -->
+                            <div class="row signoff">
                                 <div class="col-6">
                                     <p><strong>Employee:</strong> <span t-esc="employee.name"/></p>
                                     <p t-if="timesheet_submitted_date">
@@ -171,12 +166,12 @@
                         </div>
                     </div>
 
-                    <!-- Custom footer: overrides external_layout's multi-line address
-                         footer with the compact single-line Tel/Email/Web layout used
-                         in the Odoo 16 version of the report. wkhtmltopdf renders any
-                         element with class="footer" as the page footer. -->
+                    <!-- Compact one-line footer (Tel/Email/Web) + page X of Y.
+                         wkhtmltopdf renders any element with class="footer" as the
+                         per-page footer. This overrides external_layout's verbose
+                         multi-line address footer. -->
                     <div class="footer">
-                        <div class="text-center" style="border-top: 1px solid #dee2e6; padding-top: 10px;">
+                        <div class="text-center" style="border-top: 1px solid #c5d2e0; padding-top: 8px; font-size: 10px; color: #5a6678;">
                             <div class="row">
                                 <div class="col-12 text-center">
                                     <span t-if="company_data.get('phone')">Tel: <t t-esc="company_data['phone']"/></span>
@@ -184,7 +179,7 @@
                                     <span t-if="company_data.get('website')">Web: <t t-esc="company_data['website']"/></span>
                                 </div>
                             </div>
-                            <div class="text-center text-muted mt-2">
+                            <div class="text-center mt-1">
                                 Page <span class="page"/> of <span class="topage"/>
                             </div>
                         </div>
