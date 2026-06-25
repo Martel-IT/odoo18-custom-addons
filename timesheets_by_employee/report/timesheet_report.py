@@ -102,6 +102,11 @@ class ReportTimesheet(models.AbstractModel):
         }
 
         # ── Submission / approval info from hr_timesheet.sheet ───────────────
+        # OCA hr_timesheet_sheet in v18 does not expose date_submitted or
+        # date_approved fields on the sheet. The information is only kept
+        # implicitly in mail.tracking.value rows produced by the auto-tracked
+        # `state` field. Read it from there: first state transition is the
+        # submission, latest transition on a done sheet is the approval.
         reviewer_name = ''
         timesheet_submitted_date = None
         timesheet_approved_date = None
@@ -115,10 +120,22 @@ class ReportTimesheet(models.AbstractModel):
                 sheet_domain, limit=1, order='date_end desc')
             if sheet:
                 reviewer_name = sheet.reviewer_id.name if sheet.reviewer_id else ''
-                timesheet_submitted_date = (
-                    getattr(sheet, 'date_submitted', None)
-                    or getattr(sheet, 'write_date', None))
-                timesheet_approved_date = getattr(sheet, 'date_approved', None)
+                Tracking = self.env['mail.tracking.value'].sudo()
+                tv_first = Tracking.search([
+                    ('mail_message_id.model', '=', 'hr_timesheet.sheet'),
+                    ('mail_message_id.res_id', '=', sheet.id),
+                    ('field_id.name', '=', 'state'),
+                ], limit=1, order='create_date asc')
+                if tv_first:
+                    timesheet_submitted_date = tv_first.mail_message_id.date
+                if sheet.state == 'done':
+                    tv_last = Tracking.search([
+                        ('mail_message_id.model', '=', 'hr_timesheet.sheet'),
+                        ('mail_message_id.res_id', '=', sheet.id),
+                        ('field_id.name', '=', 'state'),
+                    ], limit=1, order='create_date desc')
+                    if tv_last:
+                        timesheet_approved_date = tv_last.mail_message_id.date
 
         return {
             'doc_ids':                  self.ids,
