@@ -10,18 +10,31 @@
                          and the submission footer block gets orphaned on its own page.
                          These rules clamp font sizes / spacing back to v16 density. -->
                     <style>
-                        .o_ts_report h2 { font-size: 20px; margin-bottom: 12px; }
-                        .o_ts_report h4 { font-size: 15px; margin-top: 12px; margin-bottom: 4px; padding: 6px 10px !important; }
-                        .o_ts_report h5 { font-size: 13px; margin-top: 8px; margin-bottom: 4px; }
+                        .o_ts_report h2 { font-size: 22px; margin-bottom: 14px; font-weight: 400; }
+                        .o_ts_report h4 {
+                            font-size: 17px; margin-top: 16px; margin-bottom: 6px;
+                            padding: 6px 10px !important; font-weight: 500;
+                            /* Keep project header with its first task — no orphaning. */
+                            page-break-after: avoid;
+                        }
+                        .o_ts_report h5 {
+                            font-size: 14px; margin-top: 10px; margin-bottom: 4px;
+                            font-weight: 500;
+                            /* Keep task header with its table. */
+                            page-break-after: avoid;
+                        }
                         .o_ts_report p  { margin-bottom: 4px; }
-                        .o_ts_report .row.mb-4 { margin-bottom: 6px !important; }
-                        .o_ts_report .row.mt-4 { margin-top: 6px !important; }
-                        .o_ts_report .row.mt-5 { margin-top: 14px !important; }
-                        .o_ts_report .mt-3 { margin-top: 4px !important; }
-                        .o_ts_report .mb-4 { margin-bottom: 6px !important; }
-                        .o_ts_report table.table { font-size: 11px; margin-bottom: 6px; }
-                        .o_ts_report table.table-sm &gt; :not(caption) &gt; * &gt; * { padding: 0.15rem 0.4rem; }
+                        .o_ts_report .row.mb-4 { margin-bottom: 8px !important; }
+                        .o_ts_report .row.mt-4 { margin-top: 10px !important; }
+                        .o_ts_report .row.mt-5 { margin-top: 18px !important; }
+                        .o_ts_report .mt-3 { margin-top: 6px !important; }
+                        .o_ts_report .mb-4 { margin-bottom: 8px !important; }
+                        .o_ts_report table.table { font-size: 11.5px; margin-bottom: 8px; }
+                        .o_ts_report table.table-sm &gt; :not(caption) &gt; * &gt; * { padding: 0.2rem 0.5rem; }
                         .o_ts_report .text-right { text-align: right; }
+                        .o_ts_report .text-end  { text-align: right; }
+                        /* Project total banner: lighter, less visually heavy than h4. */
+                        .o_ts_report .project-total { font-size: 12px; padding: 4px 10px !important; margin-bottom: 12px; }
                     </style>
                     <div class="page o_ts_report">
                         <div class="container">
@@ -125,7 +138,7 @@
                                             </div>
                                         </t>
 
-                                        <div class="text-right mb-4 bg-light p-2">
+                                        <div class="text-right bg-light project-total">
                                             <strong>Project Total: </strong>
                                             <span t-esc="timesheet_data['projects'][project]['subtotal_display']"/>
                                         </div>
