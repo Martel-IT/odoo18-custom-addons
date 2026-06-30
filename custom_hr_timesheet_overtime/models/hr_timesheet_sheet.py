@@ -298,13 +298,21 @@ class Sheet(models.Model):
                migrated leaves that survived with the field populated).
             2. ``number_of_hours`` NULL/0 but ``number_of_days >= 1`` →
                treat as a full work day. Catches A2-class migration
-               corruption.
-            3. ``number_of_hours`` NULL/0 and ``number_of_days < 1`` →
-               derive from the datetime span as best effort. Covers
-               half-day migrations that lost the hours field; for
-               the 2 known A4 records (half-day on truncated mirror)
-               this slightly under-counts coverage — acceptable given
-               the volume.
+               corruption where the calendar mirror collapsed to a
+               near-zero span.
+            3. ``number_of_hours`` NULL/0 and ``0 < number_of_days < 1``
+               (half-day or partial-day) → take the smaller of the
+               datetime span and ``days × day_duty_hours``. The migrated
+               half-day data observed in the wild keeps the FULL
+               work-day range on date_from/date_to even though
+               number_of_days correctly says 0.5 (e.g. an afternoon
+               leave migrated with span 07:00→15:00 UTC = 8h), so
+               using the raw span alone over-counts to a full day.
+               ``days × dh`` is the safer upper bound; the ``min`` keeps
+               precision when the span is genuinely accurate (e.g.
+               fresh half-days where span = 4h).
+            4. ``number_of_hours`` NULL/0 and no ``number_of_days``
+               either → best-effort from the datetime span. Rare.
 
           Multi-day leave (date_from.date() != date_to.date()): full-day
           coverage. ``number_of_hours`` on multi-day rows is the total
@@ -317,6 +325,15 @@ class Sheet(models.Model):
                     covered += leave_hours
                 elif days and days >= 1.0:
                     covered += day_duty_hours
+                elif days:
+                    # Partial day (0 < days < 1). Pick the smaller of
+                    # span and days*dh: span is right when migration
+                    # preserved precise leave times, but very often
+                    # (Massimo Jul 14 case) the migration kept the
+                    # full work-day range even on half-day leaves —
+                    # days*dh is the safer bound there.
+                    span_h = (leave_to - leave_from).total_seconds() / 3600.0
+                    covered += min(span_h, days * day_duty_hours, day_duty_hours)
                 else:
                     span_h = (leave_to - leave_from).total_seconds() / 3600.0
                     covered += min(span_h, day_duty_hours)
