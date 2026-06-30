@@ -281,16 +281,45 @@ class Sheet(models.Model):
     def _leave_hours_on_day(leaves, day_duty_hours):
         """
         Sum the hours that the leaves cover on a specific day.
-        - Single-day leave (date_from.date() == date_to.date()): use
-          leave.number_of_hours, which already reflects contract attendances
-          (e.g. 4h for a half day morning on a 90% Friday).
-        - Multi-day leave covering this whole day: count the full day_duty_hours,
-          since leave.number_of_hours is the total across all spanned days.
+
+        Cascade of fall-backs, ordered by data reliability. A DB survey on
+        3935 single-day migrated leaves with NULL number_of_hours showed
+        ~18% of them (707 rows) had a calendar mirror so truncated it was
+        effectively zero — typically because the migration linked the
+        mirror to a different calendar than the employee's actual contract
+        (e.g. Easter Monday materialised as a 4h6m span on calendar_id=4
+        for an employee whose contract uses calendar_id=175). Across all
+        the broken rows ``number_of_days`` was the only consistently
+        reliable signal, so we trust it as the full-day marker:
+
+          Single-day leave (date_from.date() == date_to.date()):
+            1. ``number_of_hours`` set → precise (e.g. 4h for half-day
+               morning on a 90% Friday — covers both fresh leaves and
+               migrated leaves that survived with the field populated).
+            2. ``number_of_hours`` NULL/0 but ``number_of_days >= 1`` →
+               treat as a full work day. Catches A2-class migration
+               corruption.
+            3. ``number_of_hours`` NULL/0 and ``number_of_days < 1`` →
+               derive from the datetime span as best effort. Covers
+               half-day migrations that lost the hours field; for
+               the 2 known A4 records (half-day on truncated mirror)
+               this slightly under-counts coverage — acceptable given
+               the volume.
+
+          Multi-day leave (date_from.date() != date_to.date()): full-day
+          coverage. ``number_of_hours`` on multi-day rows is the total
+          across all spanned days, so we can't slice it per day.
         """
         covered = 0.0
-        for leave_from, leave_to, _days, leave_hours in leaves:
+        for leave_from, leave_to, days, leave_hours in leaves:
             if leave_from.date() == leave_to.date():
-                covered += leave_hours or 0.0
+                if leave_hours:
+                    covered += leave_hours
+                elif days and days >= 1.0:
+                    covered += day_duty_hours
+                else:
+                    span_h = (leave_to - leave_from).total_seconds() / 3600.0
+                    covered += min(span_h, day_duty_hours)
             else:
                 return day_duty_hours
         return covered
