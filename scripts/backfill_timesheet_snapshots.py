@@ -33,6 +33,19 @@ end — no rollback of the rest.
 """
 
 from collections import defaultdict
+from datetime import date
+
+# OD18 went live on this date. Sheets with `date_end < MIGRATION_CUTOFF`
+# are pre-migration: their authoritative snapshot lives in OD16 and is
+# imported via the `restore_clean_odoo18v2.sh` step that copies OD16's
+# `total_duty_hours_done` and `total_diff_hours` into OD18.
+#
+# We MUST NOT recompute those: OCA 16→18 does not carry over a clean
+# enough copy of resource.calendar.leaves / hr.leave to reproduce the
+# duty hours OD16 computed. Empirically, recomputing here drifts by
+# ~8h per missing leave day — adding up to ~30h over 9 years for some
+# employees (e.g. Gabriele Cerfoglio).
+MIGRATION_CUTOFF = date(2025, 12, 1)
 
 Sheet = env['hr_timesheet.sheet'].sudo()
 
@@ -47,6 +60,7 @@ for s in done_sheets:
     by_employee[s.employee_id.id].append(s)
 
 total_ok = 0
+total_skipped = 0
 errors = []
 
 for emp_id, sheets in by_employee.items():
@@ -54,6 +68,11 @@ for emp_id, sheets in by_employee.items():
     print("  %s [id=%s]: %d sheets" % (emp_name, emp_id, len(sheets)))
     for sheet in sheets:
         try:
+            if sheet.date_end and sheet.date_end < MIGRATION_CUTOFF:
+                # Trust OD16 imported snapshot, do not recompute.
+                total_skipped += 1
+                continue
+
             # Zero the snapshot fields so the compute methods fall through
             # to the live branch on the next read. The custom write()
             # override only mutates these fields when 'state' is in vals,
@@ -83,6 +102,7 @@ for emp_id, sheets in by_employee.items():
 
 env.cr.commit()
 print("---")
-print("Done. Refreshed %d sheets. Errors: %d" % (total_ok, len(errors)))
+print("Done. Refreshed %d sheets. Skipped (pre-cutoff): %d. Errors: %d"
+      % (total_ok, total_skipped, len(errors)))
 for sid, name, err in errors:
     print("  - %s | %s | %s" % (sid, name, err))
