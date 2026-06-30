@@ -22,7 +22,7 @@
 
 import math
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo import api, fields, models, _
 from dateutil import rrule, parser
 from dateutil.relativedelta import relativedelta
@@ -147,62 +147,70 @@ class Sheet(models.Model):
 
     def _fetch_period_calendar_leaves(self, employee_id, date_start, date_end):
         """
-        One DB query: resource.calendar.leaves overlapping the period that
-        apply to this employee (either calendar-global or attached to the
-        employee's own resource). Returns {'YYYY-MM-DD': True} for O(1)
-        per-day membership checks.
+        One DB query: ALL resource.calendar.leaves overlapping the period
+        that apply to this employee (either calendar-global or attached to
+        the employee's own resource). Returns
+            {'YYYY-MM-DD': [(date_from, date_to), ...]}
+        with the precise datetime spans, so _calc_duty_hours_batch can
+        compute hour-accurate coverage rather than guessing from days.
 
-        Public holidays migrated from Odoo 16 land in this table as
-        per-resource records (one copy per employee per holiday) rather
-        than as calendar-global entries, so filtering by resource_id is
-        required to find them. Treated as full-day absences: any record
-        covering a day zeroes duty for that day.
+        Includes rows whose holiday_id is set. Two reasons:
+          1. Personal hr.leave mirrors carry the exact precision that the
+             matching hr.leave does — useful as a fallback when the
+             hr.leave's number_of_hours is missing (post-migration data).
+          2. Public holidays migrated from Odoo 16 spawn a per-employee
+             hr.leave whose mirror lives here with holiday_id set. The
+             old filter dropped them and caused holidays to count as
+             full duty.
 
-        Excludes records linked to an hr.leave (holiday_id set): personal
-        time off lives in resource.calendar.leaves as a mirror of the
-        hr.leave, and is already accounted for hour-by-hour by
-        _fetch_period_leaves. Counting both would zero out half-day
-        leaves instead of preserving the residual duty.
+        Double-counting against hr.leave is prevented in
+        _calc_duty_hours_batch: hr.leave wins when its number_of_hours
+        is reliable, and the mirror is only consulted as a precise
+        fallback (or as primary when no hr.leave covers the day at all).
         """
         employee = self.env['hr.employee'].browse(employee_id)
         resource = employee.resource_id
         leaves = self.env['resource.calendar.leaves'].search([
             ('date_from', '<=', date_end),
             ('date_to', '>=', date_start),
-            ('holiday_id', '=', False),
             '|', ('resource_id', '=', False),
                  ('resource_id', '=', resource.id),
         ])
-        covered_days = {}
+        spans_by_date = {}
         for leave in leaves:
             for leave_date in rrule.rrule(rrule.DAILY,
                                           dtstart=leave.date_from,
                                           until=leave.date_to):
-                covered_days[leave_date.strftime('%Y-%m-%d')] = True
-        return covered_days
+                key = leave_date.strftime('%Y-%m-%d')
+                spans_by_date.setdefault(key, []).append(
+                    (leave.date_from, leave.date_to))
+        return spans_by_date
 
     def _calc_duty_hours_batch(self, date_line, contracts, leaves_by_date,
                                calendar_leaves_by_date, wh_cache):
         """
         Calculate duty hours for one date using pre-fetched data (no DB calls).
-        wh_cache: dict {(calendar_id, date_str): working_hours} shared across dates
-                  to avoid re-computing the same calendar+date pair.
+        wh_cache: dict {(calendar_id, date_str): working_hours} shared across
+                  dates to avoid re-computing the same calendar+date pair.
 
-        Residual duty for the day = contract working hours - hours actually covered
-        by validated leaves. Using leave.number_of_hours (rather than guessing from
-        number_of_days == 0.5) keeps the result correct on part-time calendars
-        where a half day != half of an 8h day (e.g. 90% with Friday morning only).
+        Residual duty for the day = contract working hours − hours covered by
+        validated leaves. Coverage is resolved through a cascade of fall-backs
+        so the result is correct on every shape of input we have observed
+        (fresh personal leaves, half-day on a 90% contract, migrated public
+        holidays with NULL number_of_hours, calendar-global holidays, …):
 
-        calendar_leaves_by_date marks days covered by resource.calendar.leaves
-        (public holidays migrated as per-resource records); those days are
-        treated as full-day absences and contribute 0 duty regardless of the
-        contract's working hours.
+          1. hr.leave personale (via leaves_by_date)
+             ▸ usa leave.number_of_hours quando settato (precise)
+             ▸ se NULL (migrated record) cade su (date_to − date_from) span
+               misurato sul mirror in resource.calendar.leaves
+          2. resource.calendar.leaves (via calendar_leaves_by_date)
+             ▸ usato come fonte unica quando non c'è alcun hr.leave per il
+               giorno (festivo calendar-global o festivo migrato di cui
+               l'hr.leave parent non è stato preso da _fetch_period_leaves)
+          3. nessuna leave → duty hours completa dal contratto
         """
         duty_hours = 0.0
         date_key = date_line.strftime('%Y-%m-%d')
-
-        if calendar_leaves_by_date.get(date_key):
-            return 0.0
 
         start_dt = (date_line if isinstance(date_line, datetime)
                     else datetime(date_line.year, date_line.month, date_line.day))
@@ -223,13 +231,51 @@ class Sheet(models.Model):
                         resource_id=self.employee_id.id))
             dh = wh_cache[cache_key] or 0.0
 
-            leaves = leaves_by_date.get(date_key, [])
-            if not leaves:
-                duty_hours += dh
+            hr_leaves = leaves_by_date.get(date_key, [])
+            cal_spans = calendar_leaves_by_date.get(date_key, [])
+
+            if hr_leaves:
+                covered = self._leave_hours_on_day(hr_leaves, dh)
+                # Migrated hr.leave with number_of_hours NULL: fall back to
+                # the calendar-leaves datetime span (the mirror always
+                # carries the actual leave window).
+                if not covered and cal_spans:
+                    covered = self._covered_from_calendar(
+                        date_only, dh, cal_spans)
+                duty_hours += max(0.0, dh - covered)
                 continue
 
-            duty_hours += max(0.0, dh - self._leave_hours_on_day(leaves, dh))
+            if cal_spans:
+                # Calendar-only leave (public holiday without a matching
+                # personal hr.leave row picked up by _fetch_period_leaves).
+                covered = self._covered_from_calendar(date_only, dh, cal_spans)
+                duty_hours += max(0.0, dh - covered)
+                continue
+
+            duty_hours += dh
         return duty_hours
+
+    @staticmethod
+    def _covered_from_calendar(day_date, day_duty_hours, segments):
+        """
+        Compute leave-covered hours on a day from resource.calendar.leaves
+        datetime spans intersected with the day window. Capped at the day's
+        duty hours so an over-eager full-day marker can never bring the
+        balance below zero.
+
+        ``segments`` is a list of (date_from, date_to) datetimes for entries
+        that touch this date.
+        """
+        day_start = datetime(day_date.year, day_date.month, day_date.day)
+        day_end = day_start + timedelta(days=1)
+        total_h = 0.0
+        for seg_from, seg_to in segments:
+            s = max(seg_from, day_start)
+            e = min(seg_to, day_end)
+            if e <= s:
+                continue
+            total_h += (e - s).total_seconds() / 3600.0
+        return min(total_h, day_duty_hours)
 
     @staticmethod
     def _leave_hours_on_day(leaves, day_duty_hours):
