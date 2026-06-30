@@ -336,7 +336,17 @@ class Sheet(models.Model):
                     covered += min(span_h, days * day_duty_hours, day_duty_hours)
                 else:
                     span_h = (leave_to - leave_from).total_seconds() / 3600.0
-                    covered += min(span_h, day_duty_hours)
+                    if span_h < 0.02:
+                        # Degenerate span (< 1 minute) with no usable
+                        # days/hours info — the OCA 16→18 scripts
+                        # produce this for ~84 Compensatory Days where
+                        # date_from/date_to collapsed to the leave's
+                        # *creation* timestamp instead of the actual
+                        # leave window. Empirically every observed case
+                        # was a full work day, so default there.
+                        covered += day_duty_hours
+                    else:
+                        covered += min(span_h, day_duty_hours)
             else:
                 return day_duty_hours
         return covered
