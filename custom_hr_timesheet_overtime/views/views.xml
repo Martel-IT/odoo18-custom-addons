@@ -31,6 +31,7 @@
                     icon="fa-trash-o"
                     title="Delete"
                     class="btn-link text-danger"
+                    column_invisible="parent.state not in ('draft', 'new')"
                     confirm="Delete this timesheet entry?"/>
         </xpath>
         </data>
