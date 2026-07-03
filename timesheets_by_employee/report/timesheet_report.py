@@ -119,7 +119,10 @@ class ReportTimesheet(models.AbstractModel):
             sheet = self.env['hr_timesheet.sheet'].search(
                 sheet_domain, limit=1, order='date_end desc')
             if sheet:
-                reviewer_name = sheet.reviewer_id.name if sheet.reviewer_id else ''
+                # Prefer the reviewer's user full name: employee records
+                # may carry name variants.
+                reviewer_name = (sheet.reviewer_id.user_id.name
+                                 or sheet.reviewer_id.name) if sheet.reviewer_id else ''
                 Tracking = self.env['mail.tracking.value'].sudo()
                 tv_first = Tracking.search([
                     ('mail_message_id.model', '=', 'hr_timesheet.sheet'),
