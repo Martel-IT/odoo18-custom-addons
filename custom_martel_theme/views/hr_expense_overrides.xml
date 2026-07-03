@@ -52,6 +52,10 @@
         <field name="model">hr.expense.sheet</field>
         <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
         <field name="arch" type="xml">
+            <!-- OD16-parity placeholder for the report summary -->
+            <xpath expr="//h1/field[@name='name']" position="attributes">
+                <attribute name="placeholder">e.g. Project name - Reason for travel - Location</attribute>
+            </xpath>
             <xpath expr="//field[@name='expense_line_ids']/list" position="replace">
                 <list editable="bottom">
                     <field name="employee_id" column_invisible="True"/>
