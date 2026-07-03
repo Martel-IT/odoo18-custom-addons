@@ -92,6 +92,20 @@
         </field>
     </record>
 
+    <!-- Add "Report ID" as first visible column of the Expense Reports list
+         (parity with our OD16 setup). Also inherited by the "My Reports"
+         dashboard list, which extends the same view. -->
+    <record id="view_hr_expense_sheet_tree_martel" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.list.martel</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_tree"/>
+        <field name="arch" type="xml">
+            <field name="employee_id" position="before">
+                <field name="id" string="Report ID" optional="show"/>
+            </field>
+        </field>
+    </record>
+
     <!-- Add "Analytic Account" to the Group By menu of Expenses Analysis
          (parity with our OD16 setup). Requires analytic_account_id to be
          stored (see models/hr_expense.py), otherwise it cannot be grouped.
