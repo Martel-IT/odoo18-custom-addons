@@ -37,7 +37,10 @@ class HrExpenseSheet(models.Model):
         for sheet in self:
             approval_date = False
             if sheet.state in ('approve', 'post', 'done'):
-                for msg in sheet.message_ids.sorted('date'):
+                # tracking_value_ids is restricted to base.group_system in
+                # Odoo 18: read via sudo so non-admin users (e.g. secretariat
+                # printing the report) don't hit an AccessError.
+                for msg in sheet.sudo().message_ids.sorted('date'):
                     for tv in msg.tracking_value_ids:
                         field_name = tv.field_id.name if tv.field_id else ''
                         new_val = (tv.new_value_char or '').lower()
