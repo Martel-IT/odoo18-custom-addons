@@ -92,6 +92,24 @@
         </field>
     </record>
 
+    <!-- Add "Analytic Account" to the Group By menu of Expenses Analysis
+         (parity with our OD16 setup). Requires analytic_account_id to be
+         stored (see models/hr_expense.py), otherwise it cannot be grouped.
+         Anchored on the group-less "expensesmonth" filter: nodes carrying
+         groups= may be stripped before inherited xpaths are applied. -->
+    <record id="hr_expense_view_search_martel" model="ir.ui.view">
+        <field name="name">hr.expense.view.search.martel</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='expensesmonth']" position="after">
+                <filter string="Analytic Account" name="analytic_account" domain="[]"
+                        context="{'group_by': 'analytic_account_id'}"
+                        groups="analytic.group_analytic_accounting"/>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Override Expenses Analysis pivot: default measure = Total (company currency)
          instead of Total in Currency -->
     <record id="hr_expense_view_pivot_martel" model="ir.ui.view">
