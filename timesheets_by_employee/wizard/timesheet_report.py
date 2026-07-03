@@ -104,7 +104,9 @@ class TimesheetReport(models.TransientModel):
         form when the default one belongs to a more senior employee
         (older hr.employee record). Seniority is compared on
         (create_date, id); duplicated employee records of the same person
-        (e.g. one per company) are not treated as collisions."""
+        (e.g. one per company) are not treated as collisions.
+        Employee records may carry name variants, so the acronym is always
+        computed from the linked user's full name when available."""
         acronym = _acronym_from_name(name)
         if not acronym:
             return 'XXX'
@@ -113,9 +115,10 @@ class TimesheetReport(models.TransientModel):
         others = self.env['hr.employee'].sudo().with_context(
             active_test=False).search([('id', 'not in', employee.ids)])
         for other in others:
-            if (other.name or '').strip() == name.strip():
+            other_name = (other.user_id.name or other.name or '').strip()
+            if other_name == name.strip():
                 continue
-            if _acronym_from_name(other.name) != acronym:
+            if _acronym_from_name(other_name) != acronym:
                 continue
             if (other.create_date or datetime.max, other.id) < own_key:
                 return _alternate_acronym(name)
@@ -131,7 +134,9 @@ class TimesheetReport(models.TransientModel):
         employee = self.env['hr.employee'].sudo().with_context(
             active_test=False).search(
             [('user_id', '=', self.user_id.id)], limit=1)
-        name = employee.name or self.user_id.name or ''
+        # Prefer the user's full name: employee records may carry name
+        # variants for people with more than one name.
+        name = self.user_id.name or employee.name or ''
         acronym = self._get_employee_acronym(employee, name)
         company = employee.company_id or self.env.company
         company_label = COMPANY_SHORT_NAMES.get(
