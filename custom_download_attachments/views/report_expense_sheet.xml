@@ -3,51 +3,90 @@
 
     <!-- =========================================================
          Custom Martel expense sheet report template
-         Renders: header (ID, Employee, Approval Date, …)
-                  expense lines table
-                  total row
-                  signature line
+         Renders: title band (ID + approval date), header fields,
+                  expense lines table, total row, signature line
     ========================================================= -->
     <template id="report_expense_sheet_martel" name="Expense Sheet Report (Martel)">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
-                    <div class="page">
+                    <!-- Same Martel-blue accents as the timesheet PDF
+                         (timesheets_by_employee/report/timesheet_templates.xml). -->
+                    <style>
+                        .o_exp_report .exp-title-row {
+                            border-bottom: 2px solid #1f3a5f;
+                            padding: 4px 0; margin-bottom: 14px;
+                        }
+                        .o_exp_report .exp-title {
+                            font-size: 20px; font-weight: 500;
+                            color: #1f3a5f; margin: 0;
+                        }
+                        .o_exp_report .exp-title .exp-id { font-size: 15px; margin-left: 8px; }
+                        .o_exp_report .exp-approval {
+                            font-size: 12px; color: #1f3a5f;
+                            text-align: right; padding-top: 10px;
+                        }
+                        .o_exp_report .exp-meta { font-size: 12px; margin-bottom: 14px; }
+                        .o_exp_report .exp-meta strong { color: #1f3a5f; }
+                        .o_exp_report .exp-meta p { margin: 2px 0 0 0; }
 
-                        <!-- Title row with ID -->
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <h2>
+                        .o_exp_report table.table {
+                            font-size: 11px;
+                            border-color: #c5d2e0;
+                        }
+                        .o_exp_report table.table thead th {
+                            background: #eef3f8; color: #1f3a5f;
+                            font-weight: 600;
+                            border-bottom: 1px solid #c5d2e0;
+                        }
+                        .o_exp_report table.exp-lines tbody tr:nth-child(even) td {
+                            background: #f7f9fc;
+                        }
+                        .o_exp_report .exp-total td {
+                            background: #eef3f8; color: #1f3a5f;
+                            font-weight: 600;
+                            border-top: 1px solid #c5d2e0;
+                        }
+                        .o_exp_report .exp-signoff {
+                            margin-top: 18px; padding-top: 10px;
+                            border-top: 1px solid #c5d2e0;
+                            font-size: 12px;
+                            page-break-inside: avoid;
+                        }
+                        .o_exp_report .exp-signoff strong { color: #1f3a5f; }
+                    </style>
+                    <div class="page o_exp_report">
+
+                        <!-- Title band: report ID left, approval date right -->
+                        <div class="row exp-title-row">
+                            <div class="col-8">
+                                <h2 class="exp-title">
                                     Expense Report
-                                    <span style="font-size: 1.4rem; margin-left: 10px;">
-                                        (ID: <span t-esc="o.id"/>)
-                                    </span>
+                                    <span class="exp-id">(ID: <span t-esc="o.id"/>)</span>
                                 </h2>
+                            </div>
+                            <div class="col-4 exp-approval">
+                                <strong>Approval Date:</strong>
+                                <t t-if="o.date_approve">
+                                    <span t-field="o.date_approve"/>
+                                </t>
+                                <t t-else="">—</t>
                             </div>
                         </div>
 
                         <!-- Header fields -->
-                        <div class="row mt32 mb32">
-                            <div class="col-2">
+                        <div class="row exp-meta">
+                            <div class="col-3">
                                 <strong>Employee:</strong>
                                 <p t-field="o.employee_id.name"/>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <strong>Description:</strong>
                                 <p t-field="o.name"/>
                             </div>
                             <div class="col-2">
                                 <strong>Validated By:</strong>
                                 <p t-field="o.user_id"/>
-                            </div>
-                            <div class="col-2">
-                                <strong>Approval Date:</strong>
-                                <p>
-                                    <t t-if="o.date_approve">
-                                        <span t-field="o.date_approve"/>
-                                    </t>
-                                    <t t-else="">—</t>
-                                </p>
                             </div>
                             <div class="col-3">
                                 <strong>Payment By:</strong>
@@ -56,7 +95,7 @@
                         </div>
 
                         <!-- Expense lines table -->
-                        <table class="table table-sm">
+                        <table class="table table-sm exp-lines">
                             <thead>
                                 <tr>
                                     <th class="col-2">Date</th>
@@ -108,7 +147,7 @@
                         <div class="row justify-content-end">
                             <div class="col-4">
                                 <table class="table table-sm">
-                                    <tr class="border-black">
+                                    <tr class="exp-total">
                                         <td><strong>Total</strong></td>
                                         <td class="text-end">
                                             <span t-field="o.total_amount"
@@ -119,7 +158,9 @@
                             </div>
                         </div>
 
-                        <p>Certified honest and conform,<br/>(Date and signature).<br/><br/></p>
+                        <div class="exp-signoff">
+                            <p>Certified honest and conform,<br/>(Date and signature).</p>
+                        </div>
 
                     </div>
                 </t>
@@ -134,6 +175,8 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">custom_download_attachments.report_expense_sheet_martel</field>
         <field name="report_file">custom_download_attachments.report_expense_sheet_martel</field>
+        <!-- Same filename the old merged-PDF flow produced -->
+        <field name="print_report_name">'Expense_Report_%s_%s' % ((object.employee_id.name or 'employee').replace('/', '-'), object.id)</field>
         <field name="paperformat_id" ref="base.paperformat_euro"/>
     </record>
 
