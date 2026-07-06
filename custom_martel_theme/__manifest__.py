@@ -12,9 +12,11 @@
         'mail',
         'hr_timesheet',
         'hr_expense',
+        'hr_holidays',
     ],
     'data': [
         'views/hr_expense_overrides.xml',
+        'views/hr_leave_overrides.xml',
         'views/report_layout.xml',
     ],
     'assets': {
