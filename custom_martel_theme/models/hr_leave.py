@@ -10,12 +10,10 @@ class HrEmployee(models.Model):
         super()._compute_display_name()
         if self.env.context.get('timeoff_clean_employee_names'):
             for employee in self:
-                # The user full name (res.users) is the clean, canonical one:
-                # per-company employee records carry hand-typed variant names
-                # (e.g. "Jane Doe D4P") and multi-record users also get a
-                # " - Company" suffix appended by standard Odoo.
-                user = employee.sudo().user_id
-                employee.display_name = user.name or employee.name
+                # Keep the employee record's own full name: drop only the
+                # " - Company" suffix core Odoo appends when the same user
+                # has employee records in several companies.
+                employee.display_name = employee.name
 
 
 # Show the clean employee name in time off lists and exports. The flag is
