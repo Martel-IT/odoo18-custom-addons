@@ -29,18 +29,27 @@ class HrEmployee(models.Model):
 # The four methods are repeated per model because the registry rejects
 # plain-Python mixin bases on models ("object layout differs" when it
 # reassigns __bases__ during setup_models).
+#
+# web_search_read, web_read_group and read_group are model-level methods in
+# core Odoo (@api.model): the overrides MUST keep that decorator, otherwise
+# call_kw treats them as record methods and tries to pop a recordset off the
+# (empty) positional args -> "IndexError: list index out of range". export_data
+# is a regular recordset method, so it stays undecorated.
 
 class HrLeave(models.Model):
     _inherit = 'hr.leave'
 
+    @api.model
     def web_search_read(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_search_read(*args, **kwargs)
 
+    @api.model
     def web_read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_read_group(*args, **kwargs)
 
+    @api.model
     def read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().read_group(*args, **kwargs)
@@ -53,14 +62,17 @@ class HrLeave(models.Model):
 class HrLeaveReport(models.Model):
     _inherit = 'hr.leave.report'
 
+    @api.model
     def web_search_read(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_search_read(*args, **kwargs)
 
+    @api.model
     def web_read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_read_group(*args, **kwargs)
 
+    @api.model
     def read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().read_group(*args, **kwargs)
@@ -73,14 +85,17 @@ class HrLeaveReport(models.Model):
 class HrLeaveAllocation(models.Model):
     _inherit = 'hr.leave.allocation'
 
+    @api.model
     def web_search_read(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_search_read(*args, **kwargs)
 
+    @api.model
     def web_read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_read_group(*args, **kwargs)
 
+    @api.model
     def read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().read_group(*args, **kwargs)
