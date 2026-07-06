@@ -18,18 +18,20 @@ class HrEmployee(models.Model):
                 employee.display_name = user.name or employee.name
 
 
-class CleanEmployeeNames:
-    """Show the clean employee name in time off lists and exports.
+# Show the clean employee name in time off lists and exports. The flag is
+# injected in the read entry points of the web list views (web_search_read
+# for the rows, web_read_group for the group headers) and of the XLSX/CSV
+# export controller (export_data for the rows, read_group for the group
+# headers — see web/controllers/export.py). Employee dropdowns and forms are
+# left untouched on purpose: there the " - Company" suffix still
+# disambiguates multi-company records. The company info dropped from the
+# name is shown as its own column instead (see views/hr_leave_overrides.xml).
+# The four methods are repeated per model because the registry rejects
+# plain-Python mixin bases on models ("object layout differs" when it
+# reassigns __bases__ during setup_models).
 
-    The flag is injected in the read entry points of the web list views
-    (web_search_read for the rows, web_read_group for the group headers)
-    and of the XLSX/CSV export controller (export_data for the rows,
-    read_group for the group headers — see web/controllers/export.py).
-    Employee dropdowns and forms are left untouched on purpose: there the
-    " - Company" suffix still disambiguates multi-company records. The
-    company info dropped from the name is shown as its own column instead
-    (see views/hr_leave_overrides.xml).
-    """
+class HrLeave(models.Model):
+    _inherit = 'hr.leave'
 
     def web_search_read(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
@@ -39,24 +41,50 @@ class CleanEmployeeNames:
         self = self.with_context(timeoff_clean_employee_names=True)
         return super().web_read_group(*args, **kwargs)
 
-    def read_group(self, domain, fields, groupby, offset=0, limit=None,
-                   orderby=False, lazy=True):
+    def read_group(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
-        return super().read_group(domain, fields, groupby, offset=offset,
-                                  limit=limit, orderby=orderby, lazy=lazy)
+        return super().read_group(*args, **kwargs)
 
-    def export_data(self, fields_to_export):
+    def export_data(self, *args, **kwargs):
         self = self.with_context(timeoff_clean_employee_names=True)
-        return super().export_data(fields_to_export)
+        return super().export_data(*args, **kwargs)
 
 
-class HrLeave(CleanEmployeeNames, models.Model):
-    _inherit = 'hr.leave'
-
-
-class HrLeaveReport(CleanEmployeeNames, models.Model):
+class HrLeaveReport(models.Model):
     _inherit = 'hr.leave.report'
 
+    def web_search_read(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().web_search_read(*args, **kwargs)
 
-class HrLeaveAllocation(CleanEmployeeNames, models.Model):
+    def web_read_group(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().web_read_group(*args, **kwargs)
+
+    def read_group(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().read_group(*args, **kwargs)
+
+    def export_data(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().export_data(*args, **kwargs)
+
+
+class HrLeaveAllocation(models.Model):
     _inherit = 'hr.leave.allocation'
+
+    def web_search_read(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().web_search_read(*args, **kwargs)
+
+    def web_read_group(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().web_read_group(*args, **kwargs)
+
+    def read_group(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().read_group(*args, **kwargs)
+
+    def export_data(self, *args, **kwargs):
+        self = self.with_context(timeoff_clean_employee_names=True)
+        return super().export_data(*args, **kwargs)
