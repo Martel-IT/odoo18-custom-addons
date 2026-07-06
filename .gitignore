@@ -1,0 +1,6 @@
+# Privacy: local-only data files with employee names
+scripts/employee_acronyms.csv
+
+# Python bytecode
+__pycache__/
+*.pyc
