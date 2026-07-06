@@ -122,6 +122,11 @@
         <field name="model">hr.expense</field>
         <field name="inherit_id" ref="hr_expense.hr_expense_view_search"/>
         <field name="arch" type="xml">
+            <!-- Search-bar autocomplete suggestion ("Search Analytic Account for: ...") -->
+            <xpath expr="//field[@name='employee_id']" position="after">
+                <field name="analytic_account_id"
+                       groups="analytic.group_analytic_accounting"/>
+            </xpath>
             <xpath expr="//filter[@name='expensesmonth']" position="after">
                 <filter string="Analytic Account" name="analytic_account" domain="[]"
                         context="{'group_by': 'analytic_account_id'}"
