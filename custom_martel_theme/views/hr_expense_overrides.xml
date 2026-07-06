@@ -98,14 +98,16 @@
 
     <!-- Add "Report ID" as first visible column of the Expense Reports list
          (parity with our OD16 setup). Also inherited by the "My Reports"
-         dashboard list, which extends the same view. -->
+         dashboard list, which extends the same view. Uses report_ref (a
+         stored integer mirror of the id, see models/hr_expense.py) instead
+         of `id` so XLSX exports show the number, not the external id. -->
     <record id="view_hr_expense_sheet_tree_martel" model="ir.ui.view">
         <field name="name">hr.expense.sheet.list.martel</field>
         <field name="model">hr.expense.sheet</field>
         <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_tree"/>
         <field name="arch" type="xml">
             <field name="employee_id" position="before">
-                <field name="id" string="Report ID" optional="show"/>
+                <field name="report_ref" optional="show"/>
             </field>
         </field>
     </record>

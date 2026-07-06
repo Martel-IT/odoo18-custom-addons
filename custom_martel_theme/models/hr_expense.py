@@ -33,3 +33,22 @@ class HrExpense(models.Model):
                 expense.analytic_distribution = {str(expense.analytic_account_id.id): 100}
             else:
                 expense.analytic_distribution = {}
+
+
+class HrExpenseSheet(models.Model):
+    _inherit = 'hr.expense.sheet'
+
+    # Plain integer mirror of the record id: the "Report ID" list column
+    # uses it so XLSX exports show the number instead of the external id
+    # ("__export__.hr_expense_sheet_...") that exporting `id` produces.
+    # No @api.depends on purpose: the id never changes, so the value is
+    # computed once at create (and backfilled on module upgrade).
+    report_ref = fields.Integer(
+        string='Report ID',
+        compute='_compute_report_ref',
+        store=True,
+    )
+
+    def _compute_report_ref(self):
+        for sheet in self:
+            sheet.report_ref = sheet.id
