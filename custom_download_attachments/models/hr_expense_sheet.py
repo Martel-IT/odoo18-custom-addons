@@ -1,5 +1,13 @@
 from odoo import api, fields, models
 
+# Same short labels used for the timesheet export filename
+# (timesheets_by_employee/wizard/timesheet_report.py).
+COMPANY_SHORT_NAMES = {
+    'martel innovate': 'Martel CH',
+    'digital4planet': 'D4P',
+    'martel innovate bv': 'Martel BV',
+}
+
 
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
@@ -43,6 +51,43 @@ class HrExpenseSheet(models.Model):
                     if approval_date:
                         break
             sheet.date_approve = approval_date
+
+    def get_export_filename(self):
+        """Build the PDF download filename, same convention as the timesheet
+        export: <YYYYMM>_<company label>_<project>_<acronym>_<report id>.
+
+        - period: approval month (chatter date), today as a fallback;
+        - project: the analytic account when all expense lines share a
+          single one, otherwise the expense report name;
+        - acronym: the employee's Identification No, looked up on any
+          employee record of the same user (multi-company duplicates),
+          falling back to the user/employee full name.
+        Used by print_report_name on the report action, so it must stay a
+        public method (underscore-prefixed ones are blocked in safe_eval).
+        """
+        self.ensure_one()
+        sheet = self.sudo()
+        period = sheet.date_approve or fields.Date.today()
+        company = sheet.company_id or self.env.company
+        company_label = COMPANY_SHORT_NAMES.get(
+            (company.name or '').strip().lower(), company.name)
+        # analytic_account_id is the stored Many2one mirror added by
+        # custom_martel_theme on hr.expense.
+        accounts = sheet.expense_line_ids.analytic_account_id
+        project = accounts.name if len(accounts) == 1 else sheet.name
+        employees = sheet.employee_id
+        if employees.user_id:
+            siblings = self.env['hr.employee'].sudo().with_context(
+                active_test=False).search(
+                [('user_id', '=', employees.user_id.id)], order='id')
+            employees |= siblings
+        acronym = next(
+            (e.identification_id.strip().upper() for e in employees
+             if e.identification_id and e.identification_id.strip()),
+            employees[:1].user_id.name or employees[:1].name or '')
+        filename = (f"{period.strftime('%Y%m')}_{company_label}_{project}"
+                    f"_{acronym}_{sheet.id}")
+        return filename.replace('/', '-')
 
     def action_print_expense_report(self):
         """Print the expense sheet report PDF only. Attachments are NOT

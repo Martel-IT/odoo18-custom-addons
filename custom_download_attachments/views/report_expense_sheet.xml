@@ -176,7 +176,7 @@
         <field name="report_name">custom_download_attachments.report_expense_sheet_martel</field>
         <field name="report_file">custom_download_attachments.report_expense_sheet_martel</field>
         <!-- Same filename the old merged-PDF flow produced -->
-        <field name="print_report_name">'Expense_Report_%s_%s' % ((object.employee_id.name or 'employee').replace('/', '-'), object.id)</field>
+        <field name="print_report_name">object.get_export_filename()</field>
         <field name="paperformat_id" ref="base.paperformat_euro"/>
     </record>
 
