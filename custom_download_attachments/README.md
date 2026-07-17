@@ -26,7 +26,7 @@ No intermediate file is stored in the database or on the filesystem — the merg
 Install via pip (or let Odoo pick up `requirements.txt`):
 
 ```bash
-pip install Pillow==12.1.1 pypdf==6.9.1
+pip install Pillow==12.3.0 pypdf==6.14.2
 ```
 
 ### Module installation
