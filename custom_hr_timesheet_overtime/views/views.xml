@@ -20,6 +20,16 @@
                     <field name="analysis" widget="html" nolabel="1"/>
                 </page>
             </xpath>
+        <!-- Details tab: new rows default to today's date, which lands outside
+             the sheet's period whenever you're filling in a past/future sheet.
+             account.analytic.line._determine_sheet() looks up the sheet
+             covering the row's own date, so an out-of-period row gets
+             unlinked from this sheet as soon as it's created. Default to
+             date_start instead so new rows land in-period; still editable
+             per row like before. -->
+        <xpath expr="//field[@name='timesheet_ids']" position="attributes">
+            <attribute name="context">{'user_id': user_id, 'default_date': date_start}</attribute>
+        </xpath>
         <!-- Details tab: replace the pending-delete button with an immediate
              server-side unlink so onchange calls cannot restore the deleted row -->
         <xpath expr="//field[@name='timesheet_ids']/list" position="attributes">
