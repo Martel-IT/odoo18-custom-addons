@@ -15,4 +15,22 @@
             </field>
         </field>
     </record>
+
+    <!-- The Time Off Overview calendar (hr.leave.report.calendar) computes
+         is_striked = (state == 'refuse') so refused requests render with a
+         distinct "struck" pattern instead of looking like an approved one
+         (see custom_theme.scss for the corresponding CSS). On this Odoo
+         build the calendar view's arch only requests is_hatched, not
+         is_striked, so the field never reaches the client and refused
+         leaves render identically to approved ones. Add it back. -->
+    <record id="hr_leave_report_calendar_view_martel" model="ir.ui.view">
+        <field name="name">hr.leave.report.calendar.view.martel</field>
+        <field name="model">hr.leave.report.calendar</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_report_calendar_view"/>
+        <field name="arch" type="xml">
+            <field name="is_hatched" position="after">
+                <field name="is_striked" invisible="1"/>
+            </field>
+        </field>
+    </record>
 </odoo>
