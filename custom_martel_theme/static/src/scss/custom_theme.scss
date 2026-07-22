@@ -1264,6 +1264,39 @@ table.o_list_table th.col-total {
 }
 
 // =============================================================================
+// 15. TIME OFF OVERVIEW CALENDAR – make refused leaves visually distinct
+//
+// Core Odoo marks refused hr.leave records with is_striked=True (see
+// hr_leave_report_calendar.py), which the calendar view turns into the
+// o_event_striked CSS class. For its "to approve" counterpart (o_event_hatched)
+// Odoo paints the pattern on an injected .fc-bg child div with !important,
+// because on multi-day bars (fc-daygrid-event / fc-timegrid-event, e.g. a
+// 10-day vacation) FullCalendar's own background wins over a plain rule on
+// the event element. The o_event_striked rule never got that same treatment,
+// so a refused multi-day leave renders as a solid bar identical to an
+// approved one. Mirror the working hatched pattern for striked.
+// =============================================================================
+
+.o_calendar_renderer {
+    .o_event_striked:not(.o_event_dot) {
+        background: linear-gradient(
+            transparent 0 45%,
+            var(--o-event-bg, currentColor) 45% 55%,
+            transparent 55% 100%
+        ) !important;
+    }
+
+    .o_event_striked.fc-daygrid-event .fc-bg,
+    .o_event_striked.fc-timegrid-event .fc-bg {
+        background: linear-gradient(
+            transparent 0 45%,
+            var(--o-event-bg, currentColor) 45% 55%,
+            transparent 55% 100%
+        ) !important;
+    }
+}
+
+// =============================================================================
 // COMPANY SELECTOR DROPDOWN
 // =============================================================================
 
