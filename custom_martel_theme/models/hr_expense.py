@@ -41,14 +41,17 @@ class HrExpenseSheet(models.Model):
     # Plain integer mirror of the record id: the "Report ID" list column
     # uses it so XLSX exports show the number instead of the external id
     # ("__export__.hr_expense_sheet_...") that exporting `id` produces.
-    # No @api.depends on purpose: the id never changes, so the value is
-    # computed once at create (and backfilled on module upgrade).
+    # Filled explicitly at create: a stored computed field would need a
+    # dependency to be recomputed, and `id` is not a field one can depend on.
     report_ref = fields.Integer(
         string='Report ID',
-        compute='_compute_report_ref',
-        store=True,
+        readonly=True,
+        copy=False,
     )
 
-    def _compute_report_ref(self):
-        for sheet in self:
+    @api.model_create_multi
+    def create(self, vals_list):
+        sheets = super().create(vals_list)
+        for sheet in sheets:
             sheet.report_ref = sheet.id
+        return sheets
