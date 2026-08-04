@@ -926,6 +926,20 @@ thead th.o_weekend {
     min-width: max-content;
 }
 
+// ...but exempt Odoo's own list table (Details tab of the timesheet sheet, and
+// every other x2many list). Odoo lays those out with `table-layout: fixed` plus
+// per-column pixel widths computed in JS (useMagicColumnWidths, in
+// web/views/list/column_width_hook.js), sized to exactly fill the parent.
+// `min-width: max-content` above breaks that on Firefox: for a fixed-layout table
+// Gecko does not derive max-content from the column widths, it reports an
+// effectively unbounded intrinsic width, so the table grows far past the viewport
+// and every column after the first is pushed outside the container's clip. Chrome
+// resolves the same max-content from the specified column widths, which is why it
+// only ever showed up on Firefox.
+.o_form_view .o_field_one2many table.o_list_table {
+    min-width: 0 !important;
+}
+
 // =============================================================================
 // 7b. TIMESHEET SUMMARY – header days bold + totals bold
 // =============================================================================
