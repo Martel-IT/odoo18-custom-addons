@@ -44,6 +44,13 @@
                     column_invisible="parent.state not in ('draft', 'new')"
                     confirm="Delete this timesheet entry?"/>
         </xpath>
+        <!-- Details tab: the base view marks user_id invisible="1", which empties
+             the cells but still renders the column, so the list ends with an
+             always-blank "User" column. Hide the column itself. The field stays in
+             the view, so it is still loaded and still written on create. -->
+        <xpath expr="//field[@name='timesheet_ids']/list/field[@name='user_id']" position="attributes">
+            <attribute name="column_invisible">1</attribute>
+        </xpath>
         </data>
     </field>
     </record>
