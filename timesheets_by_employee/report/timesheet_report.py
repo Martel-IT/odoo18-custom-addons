@@ -27,12 +27,17 @@ class ReportTimesheet(models.AbstractModel):
             docs = self.env['timesheet.report'].browse(
                 self.env.context.get('active_id'))
 
-        user = docs.user_id[0]
-        employee = self.env['hr.employee'].search(
-            [('user_id', '=', user.id)], limit=1)
+        employee = docs.employee_id
 
         # ── Fetch timesheet lines ────────────────────────────────────────────
-        domain = [('user_id', '=', user.id)]
+        # Filter by employee, not by user: someone working for two companies
+        # has a single user but one hr.employee record per company, so a
+        # user_id domain merged both companies' hours into one PDF (and the
+        # multi-company rules made the result depend on the company switcher).
+        # employee_id is also how hr_timesheet.sheet groups its own lines, so
+        # the PDF matches the sheet even when a line's project belongs to the
+        # other company.
+        domain = [('employee_id', '=', employee.id)]
         if docs.from_date:
             domain.append(('date', '>=', docs.from_date))
         if docs.to_date:
@@ -89,7 +94,10 @@ class ReportTimesheet(models.AbstractModel):
             period = ''
 
         # ── Company data ─────────────────────────────────────────────────────
-        company = self.env.company
+        # The employee's company, not the active one: printing a Digital4Planet
+        # employee while Martel is the current company used to letterhead the
+        # PDF with the wrong company.
+        company = employee.company_id or self.env.company
         company_data = {
             'name':     company.name,
             'street':   company.street or '',
@@ -120,9 +128,13 @@ class ReportTimesheet(models.AbstractModel):
                 sheet_domain, limit=1, order='date_end desc')
             if sheet:
                 # Prefer the reviewer's user full name: employee records
-                # may carry name variants.
-                reviewer_name = (sheet.reviewer_id.user_id.name
-                                 or sheet.reviewer_id.name) if sheet.reviewer_id else ''
+                # may carry name variants. Read it with sudo: approvals are
+                # cross-company here, so the reviewer's employee record often
+                # belongs to another company and the multi-company rule raises
+                # AccessError unless that company is active in the switcher.
+                reviewer = sheet.reviewer_id.sudo()
+                reviewer_name = (reviewer.user_id.name
+                                 or reviewer.name) if reviewer else ''
                 Tracking = self.env['mail.tracking.value'].sudo()
                 tv_first = Tracking.search([
                     ('mail_message_id.model', '=', 'hr_timesheet.sheet'),

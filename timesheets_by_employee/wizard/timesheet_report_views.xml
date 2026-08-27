@@ -8,7 +8,7 @@
             <form>
                 <group>
                     <group string="Select Employee">
-                        <field name="user_id"/>
+                        <field name="employee_id"/>
                     </group>
                     <group string="Select Date">
                         <field name="from_date"/>

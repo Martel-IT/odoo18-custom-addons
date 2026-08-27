@@ -37,10 +37,20 @@ class TimesheetReport(models.TransientModel):
     _name = 'timesheet.report'
     _description = 'Timesheet Report Wizard'
 
-    user_id = fields.Many2one(
-        'res.users',
+    # The report is per employee record, not per user: someone working for two
+    # companies has a single user but one hr.employee record per company, and
+    # timesheet lines hang off the employee record. Picking the user made the
+    # PDF merge both companies' hours.
+    employee_id = fields.Many2one(
+        'hr.employee',
         string="Employee",
         required=True, help="You can select the employee")
+    # Not shown in the form: web.external_layout picks the letterhead company
+    # from the printed record's company_id when it has one, so this keeps the
+    # PDF header consistent with the employee instead of the active company.
+    company_id = fields.Many2one(
+        related='employee_id.company_id',
+        string="Company")
     from_date = fields.Date(
         string="Starting Date",
         help="You can select the starting dates for the PDF report")
@@ -59,14 +69,18 @@ class TimesheetReport(models.TransientModel):
         name is used instead."""
         self.ensure_one()
         period = self.from_date or self.to_date or fields.Date.today()
-        employees = self.env['hr.employee'].sudo().with_context(
-            active_test=False).search(
-            [('user_id', '=', self.user_id.id)], order='id')
-        employee = employees[:1]
+        employee = self.employee_id
+        # The acronym belongs to the person, not to one company's employee
+        # record, so look it up across the sibling records of the same user.
+        peers = employee
+        if employee.user_id:
+            peers = self.env['hr.employee'].sudo().with_context(
+                active_test=False).search(
+                [('user_id', '=', employee.user_id.id)], order='id')
         acronym = next(
-            (e.identification_id.strip().upper() for e in employees
+            (e.identification_id.strip().upper() for e in peers
              if e.identification_id and e.identification_id.strip()),
-            self.user_id.name or '')
+            employee.user_id.name or employee.name or '')
         company = employee.company_id or self.env.company
         company_label = COMPANY_SHORT_NAMES.get(
             (company.name or '').strip().lower(), company.name)
