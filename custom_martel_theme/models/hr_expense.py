@@ -27,6 +27,16 @@ class HrExpense(models.Model):
             else:
                 expense.analytic_account_id = False
 
+    # Plain text mirror of the analytic account name, used as the "Analytic
+    # Account" column of the expense lists. A many2one column would export its
+    # display_name ("Internal NL - Martel Innovate BV"); this exports the bare
+    # project name. Not stored: it is read-only display/export data, so there is
+    # nothing to search or group on that analytic_account_id does not cover.
+    analytic_account_name = fields.Char(
+        string='Analytic Account',
+        related='analytic_account_id.name',
+    )
+
     def _inverse_analytic_account_id(self):
         for expense in self:
             if expense.analytic_account_id:

@@ -96,6 +96,43 @@
         </field>
     </record>
 
+    <!-- Expenses lists: show the analytic account name instead of the raw
+         analytic_distribution. The widget renders account names on screen, but
+         the field stores a JSON map keyed by account id ({"50": 100.0}) and
+         XLSX/CSV exports dump that stored value, so exports carried ids instead
+         of project names. We always use a single account per expense, so
+         analytic_account_name (see models/hr_expense.py) carries the same
+         information as plain text. Inheriting the analysis list also covers the
+         "Expenses" and "My Expenses" lists, which extend it. The original field
+         is kept as a column_invisible placeholder: no installed module inherits
+         this list to target it (sale_expense only touches the form), but it
+         stays available as an xpath anchor, and being hidden it no longer
+         reaches the export. -->
+    <record id="hr_expense_view_expenses_analysis_tree_martel" model="ir.ui.view">
+        <field name="name">hr.expense.list.martel</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_expenses_analysis_tree"/>
+        <field name="arch" type="xml">
+            <field name="analytic_distribution" position="replace">
+                <field name="analytic_distribution" column_invisible="True"/>
+                <field name="analytic_account_name"
+                       optional="show"
+                       groups="analytic.group_analytic_accounting"/>
+                <!-- Editable twin, hidden by default: the name column above is
+                     read-only, so this keeps bulk reassignment (the list is
+                     multi_edit) available to whoever turns the column on.
+                     Being hidden, it stays out of the default export. -->
+                <field name="analytic_account_id"
+                       string="Analytic Account (assign)"
+                       optional="hide"
+                       groups="analytic.group_analytic_accounting"
+                       options="{'no_create': True}"
+                       domain="[('company_id', 'in', [company_id, False])]"
+                       readonly="not is_editable"/>
+            </field>
+        </field>
+    </record>
+
     <!-- Add "Report ID" as first visible column of the Expense Reports list
          (parity with our OD16 setup). Also inherited by the "My Reports"
          dashboard list, which extends the same view. Uses report_ref (a
