@@ -89,12 +89,11 @@ class TimesheetReport(models.TransientModel):
 
     def print_timesheet(self):
         """Redirect to the timesheet PDF report for this wizard record."""
-        today = fields.Date.today()
-        if self.from_date and self.to_date:
-            if self.from_date > self.to_date:
-                raise UserError("Start date cannot be after end date.")
-            if self.from_date > today or self.to_date > today:
-                raise UserError("Start date and end date cannot be in the future.")
+        # Future dates are allowed on purpose: timesheet sheets are filled in
+        # for the whole period up front, so the PDF has to be printable before
+        # the period is over.
+        if self.from_date and self.to_date and self.from_date > self.to_date:
+            raise UserError("Start date cannot be after end date.")
         # NB: do NOT pass `data` here. The report reads the wizard via
         # `active_id` from the context, not via `data`. Passing a non-empty
         # `data` makes the web client build a report URL without docids, which
